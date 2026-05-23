@@ -376,12 +376,7 @@ function bindUIEvents() {
   document.getElementById("btn-local-skip").addEventListener("click", localSkip);
   document.getElementById("btn-local-got-it").addEventListener("click", localGotIt);
 
-  // Local Round Result
-  document.getElementById("btn-local-next-round").addEventListener("click", localNextRound);
 
-  // Local Game Over
-  document.getElementById("btn-local-play-again").addEventListener("click", localPlayAgain);
-  document.getElementById("btn-local-home").addEventListener("click", exitLocalMode);
 
   // Offline Add Player Button
   document.getElementById("btn-offline-add-player").addEventListener("click", addOfflinePlayer);

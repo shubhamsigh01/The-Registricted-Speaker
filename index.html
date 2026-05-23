@@ -449,49 +449,51 @@
     </section>
 
     <!-- Local Screen L4: Charades / Heads-Up Play Screen -->
-    <section class="screen charades-screen" id="screen-local-hinting">
+    <section class="screen charades-screen game-shell" id="screen-local-hinting">
+      <div class="game-card">
 
-      <!-- Top info bar -->
-      <div class="charades-top-bar">
-        <span class="charades-meta" id="charades-round-label">ROUND 1/5</span>
-        <span class="charades-guesser" id="charades-guesser-name">PLAYER</span>
-        <span class="charades-meta" id="charades-category-label">Category</span>
-      </div>
-
-      <!-- Main 3-column play area -->
-      <div class="charades-body">
-
-        <!-- SKIP — left large button -->
-        <button class="charades-btn charades-skip" id="btn-local-skip" aria-label="Skip this word">
-          <span class="charades-btn-icon">✕</span>
-          <span class="charades-btn-label">SKIP</span>
+        <button class="action-btn btn-skip" id="btn-local-skip" aria-label="Skip this word">
+          <span class="btn-icon">⏭</span>
+          <span class="btn-label">Skip</span>
         </button>
 
-        <!-- Word + Constraint center panel -->
-        <div class="charades-center">
-          <div class="charades-word" id="charades-word">WORD</div>
-          <div class="charades-constraint-pill">
-            <span id="charades-constraint-icon">🚫</span>
-            <span id="charades-constraint-text">Constraint description</span>
+        <button class="action-btn btn-correct" id="btn-local-got-it" aria-label="Got it, correct guess">
+          <span class="btn-icon">✓</span>
+          <span class="btn-label">Correct</span>
+        </button>
+
+        <header class="game-header">
+          <span class="charades-meta" id="charades-round-label">ROUND 1/5</span>
+          <span class="charades-guesser" id="charades-guesser-name">PLAYER</span>
+          <span class="charades-meta" id="charades-category-label">Category</span>
+        </header>
+
+        <main class="game-content">
+          <section class="word-section">
+            <div class="word-display" id="charades-word">WORD</div>
+          </section>
+          
+          <section class="modifier-section">
+            <div class="charades-constraint-pill">
+              <span id="charades-constraint-icon">🚫</span>
+              <span id="charades-constraint-text">Constraint description</span>
+            </div>
+            <div class="tilt-active-badge" id="charades-tilt-badge" style="display: none;">📱 Tilt to play</div>
+          </section>
+          
+          <section class="score-section">
+            <div class="charades-score-badge" id="charades-score-badge">0 correct</div>
+          </section>
+        </main>
+
+        <footer class="progress-section">
+          <div class="charades-timer-track">
+            <div class="charades-timer-fill" id="charades-timer-fill"></div>
+            <div class="charades-timer-arrow" id="charades-timer-arrow">▶</div>
           </div>
-          <div class="charades-score-badge" id="charades-score-badge">0 correct</div>
-          <div class="tilt-active-badge" id="charades-tilt-badge" style="display: none;">📱 Tilt to play</div>
-        </div>
-
-        <!-- GOT IT — right large button -->
-        <button class="charades-btn charades-got" id="btn-local-got-it" aria-label="Got it, correct guess">
-          <span class="charades-btn-icon">✓</span>
-          <span class="charades-btn-label">GOT IT</span>
-        </button>
+        </footer>
 
       </div>
-
-      <!-- Arrow progress timer — bottom -->
-      <div class="charades-timer-track">
-        <div class="charades-timer-fill" id="charades-timer-fill"></div>
-        <div class="charades-timer-arrow" id="charades-timer-arrow">▶</div>
-      </div>
-
     </section>
 
 

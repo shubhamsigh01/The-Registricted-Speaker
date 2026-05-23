@@ -2581,11 +2581,7 @@ import { CATEGORIES, getRandomWord, getRandomCategory, parseCustomWords } from "
     // Display word with dynamic size check for long words
     const wordEl = document.getElementById("charades-word");
     wordEl.textContent = localGame.targetWord.toUpperCase();
-    if (localGame.targetWord.length > 15) {
-      wordEl.style.fontSize = "clamp(1.5rem, 6vw, 3rem)";
-    } else {
-      wordEl.style.fontSize = "";
-    }
+    wordEl.classList.toggle("word-long", localGame.targetWord.length > 15);
 
     document.getElementById("charades-constraint-icon").textContent = c.icon;
     document.getElementById("charades-constraint-text").textContent = `${c.label} — ${c.description}`;
@@ -2614,11 +2610,7 @@ import { CATEGORIES, getRandomWord, getRandomCategory, parseCustomWords } from "
     
     const wordEl = document.getElementById("charades-word");
     wordEl.textContent = localGame.targetWord.toUpperCase();
-    if (localGame.targetWord.length > 15) {
-      wordEl.style.fontSize = "clamp(1.5rem, 6vw, 3rem)";
-    } else {
-      wordEl.style.fontSize = "";
-    }
+    wordEl.classList.toggle("word-long", localGame.targetWord.length > 15);
     
     document.getElementById("charades-score-badge").textContent = `${localGame.wordsCorrect} correct`;
   }

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'restricted-speaker-v5';
+const CACHE_NAME = 'restricted-speaker-v6';
 const ASSETS = [
   './',
   './index.html',

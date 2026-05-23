@@ -67,9 +67,7 @@ const screens = {
   "local-setup": document.getElementById("screen-local-setup"),
   "local-handoff": document.getElementById("screen-local-handoff"),
   "local-peek": document.getElementById("screen-local-peek"),
-  "local-hinting": document.getElementById("screen-local-hinting"),
-  "local-round-result": document.getElementById("screen-local-round-result"),
-  "local-game-over": document.getElementById("screen-local-game-over")
+  "local-hinting": document.getElementById("screen-local-hinting")
 };
 
 

@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    window.onerror = function(msg, url, line, col, error) {
+      const div = document.createElement('div');
+      div.style.position = 'fixed';
+      div.style.top = '0';
+      div.style.left = '0';
+      div.style.width = '100vw';
+      div.style.background = '#FF4F5E';
+      div.style.color = 'white';
+      div.style.padding = '20px';
+      div.style.zIndex = '99999';
+      div.style.fontFamily = 'monospace';
+      div.style.fontSize = '12px';
+      div.style.lineHeight = '1.4';
+      div.style.boxShadow = '0 5px 15px rgba(0,0,0,0.5)';
+      div.innerHTML = '<h3 style="margin-top:0;font-size:16px;">🚨 Runtime Error:</h3>' + msg + '<br>at <b>' + url + ':' + line + ':' + col + '</b><br><br>' + (error && error.stack ? error.stack.replace(/\n/g, '<br>') : '');
+      document.body.appendChild(div);
+      return false;
+    };
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Restricted Speaker | Party Word Game</title>
+  
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#FFD60A">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="logo.png">
+  <link rel="manifest" href="manifest.json">
+  
+  <!-- SEO Best Practices -->
+  <meta name="description" content="A real-time multiplayer party word-guessing game with crazy linguistic constraints. Split into Hint-Givers and Guessers, beat the timer, and follow the rules!">
+  <link rel="icon" type="image/png" href="logo.png">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Loading Screen (shown first before Firebase/auth resolves) -->
+  <div id="loading-screen">
+    <div class="loader-inner">
+      <div class="loader-logo">🎙️</div>
+      <h1 class="loader-title">The Restricted Speaker</h1>
+      <div class="loader-bar-track">
+        <div class="loader-bar-fill" id="loader-bar"></div>
+      </div>
+      <p class="loader-tagline" id="loader-text">Setting up the game...</p>
+    </div>
+  </div>
+
+  <!-- Confetti Canvas -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- Global Firebase Credentials Cog (Allows setup in-app) -->
+  <div class="settings-indicator" id="settings-trigger" title="Firebase Settings">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"></circle>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+    </svg>
+  </div>
+
+  <!-- Primary Game Container -->
+  <main class="game-container" id="main-container">
+    
+    <!-- Screen 1: Home / Landing -->
+    <section class="screen active" id="screen-home">
+      <div class="logo-container">
+        <img src="logo.png" alt="The Restricted Speaker Logo" class="game-logo-img">
+        <h1>The Restricted Speaker</h1>
+        <p class="tagline">Words have rules. Break them and lose.</p>
+      </div>
+
+      <div class="input-group">
+        <label for="player-name" class="input-label">Your Nickname</label>
+        <input type="text" id="player-name" maxlength="16" placeholder="Enter name (max 16 chars)..." autocomplete="off">
+      </div>
+
+      <div id="join-code-container" class="input-group" style="display: none;">
+        <label for="room-code-input" class="input-label">6-Digit Room Code</label>
+        <input type="text" id="room-code-input" maxlength="6" placeholder="e.g. AB12XY" style="text-transform: uppercase;">
+      </div>
+
+      <div class="input-group" style="margin-top: 10px; display: flex; flex-direction: row; gap: 10px;">
+        <button class="btn" id="btn-create-lobby" style="flex: 1;">Create Room</button>
+        <button class="btn btn-secondary" id="btn-show-join" style="flex: 1;">Join Room</button>
+      </div>
+
+      <button class="btn btn-local" id="btn-play-local" style="width: 100%; margin-top: 10px;">
+        🏠 Play Local (Pass &amp; Play)
+      </button>
+
+      <div class="input-group" id="join-action-container" style="display: none; flex-direction: row; gap: 10px;">
+        <button class="btn btn-success" id="btn-confirm-join" style="flex: 1;">Confirm Join</button>
+        <button class="btn btn-secondary" id="btn-cancel-join" style="flex: 0.5;">Back</button>
+      </div>
+    </section>
+
+    <!-- Screen 2: Lobby -->
+    <section class="screen" id="screen-lobby">
+      <div class="game-header">
+        <span class="round-indicator">Lobby Room</span>
+        <button class="btn btn-secondary btn-sm" id="btn-leave-lobby">Leave</button>
+      </div>
+
+      <div class="room-code-panel">
+        <div class="input-label" style="font-size: 0.75rem; margin-bottom: 2px;">Share Code (Click to Copy)</div>
+        <div class="room-code-val" id="lobby-code-display">------</div>
+      </div>
+
+      <div class="lobby-columns">
+        <!-- Player List Column -->
+        <div class="lobby-col">
+          <div class="panel-title">Players (<span id="player-count">0</span>)</div>
+          
+          <!-- Offline Add Player Input -->
+          <div id="offline-add-player-panel" style="display: none; gap: 8px; margin-bottom: 12px;">
+            <input type="text" id="offline-player-name-input" placeholder="Enter player name..." style="flex: 1; padding: 8px 12px; font-size: 0.85rem; border-radius: 8px;">
+            <button class="btn btn-sm btn-success" id="btn-offline-add-player" style="padding: 8px 14px; font-size: 0.85rem;">Add</button>
+          </div>
+
+          <div class="player-list" id="lobby-player-list">
+            <!-- Dynamic Player items -->
+          </div>
+          
+          <label class="category-checkbox" style="margin-top: 12px; font-size: 0.9rem;">
+            <input type="checkbox" id="lobby-spectator-toggle">
+            <span>Join as Spectator</span>
+          </label>
+        </div>
+
+        <!-- Host Settings Column -->
+        <div class="lobby-col" id="lobby-host-controls" style="display: none;">
+          <div class="panel-title">Game Options</div>
+          <div class="host-options">
+            <div class="input-group" style="margin-bottom: 8px;">
+              <label for="select-rounds" class="input-label" style="font-size: 0.7rem;">Rounds</label>
+              <select id="select-rounds" style="padding: 6px 10px; font-size: 0.85rem;">
+                <option value="3">3 Rounds</option>
+                <option value="5" selected>5 Rounds</option>
+                <option value="7">7 Rounds</option>
+              </select>
+            </div>
+
+            <div class="input-group" style="margin-bottom: 8px;">
+              <label for="select-timer" class="input-label" style="font-size: 0.7rem;">Timer (Seconds)</label>
+              <select id="select-timer" style="padding: 6px 10px; font-size: 0.85rem;">
+                <option value="15">15 Seconds</option>
+                <option value="30" selected>30 Seconds</option>
+                <option value="45">45 Seconds</option>
+                <option value="60">60 Seconds</option>
+              </select>
+            </div>
+
+            <div class="input-group" style="margin-bottom: 8px;">
+              <label class="input-label" style="font-size: 0.7rem;">📂 Categories</label>
+              <div class="category-grid" id="lobby-categories-list">
+                <!-- Category chips populated dynamically -->
+              </div>
+              <p class="category-hint">Tap to select / deselect. Words come only from selected categories.</p>
+            </div>
+
+            <div class="file-upload-wrapper">
+              <input type="file" id="custom-word-file" class="file-upload-input" accept=".txt">
+              <label for="custom-word-file" class="file-upload-label" id="custom-word-label">
+                Upload Word Pack (.txt)
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 20px; text-align: center;" id="lobby-action-row">
+        <!-- Start button for host, waiting message for guessers -->
+        <button class="btn btn-success" id="btn-start-game" style="width: 100%;" disabled>Start Game (Need ≥ 2 players)</button>
+        <p id="lobby-wait-msg" style="margin-top: 10px; font-style: italic;">Waiting for host to start...</p>
+      </div>
+    </section>
+
+    <!-- Screen 3: Role Reveal (Saves 3 seconds of suspense) -->
+    <section class="screen" id="screen-role-reveal">
+      <div class="role-reveal-screen">
+        <div class="role-reveal-icon" id="role-reveal-icon">🎯</div>
+        <h2 class="role-reveal-title" id="role-reveal-title">ASSIGNING ROLES...</h2>
+        <p id="role-reveal-desc" style="font-size: 1.1rem; color: #fff;">Get ready!</p>
+        <button class="btn btn-success" id="btn-offline-reveal-confirm" style="display: none; margin-top: 20px; align-self: center;">
+          👀 I have the device (Reveal Word)
+        </button>
+      </div>
+    </section>
+
+    <!-- Screen 4a: Hint-Giver Interface -->
+    <section class="screen" id="screen-hinting">
+      <div class="game-header">
+        <span class="round-indicator">ROUND <span class="current-round-number">1</span> OF <span class="max-rounds-number">5</span></span>
+        <span class="category-badge" id="hinting-category">Category</span>
+      </div>
+
+      <div class="target-word-panel">
+        <div class="input-label" style="font-size: 0.75rem; margin-bottom: 4px;">Describe This Target Word</div>
+        <div class="target-word-val" id="hinting-word">Gully Cricket</div>
+      </div>
+
+      <div class="constraint-card">
+        <div class="constraint-icon" id="hinting-constraint-icon">🚫</div>
+        <div class="constraint-info">
+          <span class="constraint-label" id="hinting-constraint-label">The Vowel-Less</span>
+          <span class="constraint-desc" id="hinting-constraint-desc">No words containing the letter E</span>
+        </div>
+      </div>
+
+      <div class="timer-container">
+        <div class="timer-bar" id="hinting-timer-bar"></div>
+      </div>
+
+      <div class="panel-title">Previous Hints Sent (<span id="hinting-count-badge">0</span>/3)</div>
+      <div class="hints-feed" id="hinting-feed">
+        <!-- Dynamic list of previous hints -->
+      </div>
+
+      <div class="input-group">
+        <label for="hint-input" class="input-label">Enter Hint</label>
+        <input type="text" id="hint-input" placeholder="Type hint here obeying the rules..." autocomplete="off">
+        <div class="input-counter-row">
+          <span id="hint-input-count">0 characters</span>
+          <span class="validation-feedback invalid" id="hint-validation-feedback">Empty hint</span>
+        </div>
+      </div>
+
+      <div class="hint-controls" id="online-hinting-controls">
+        <button class="btn btn-secondary btn-sm" id="btn-hint-pass">⏭️ Pass (-50 pts)</button>
+        <button class="btn btn-success btn-sm" id="btn-hint-send" disabled>🚀 Send Hint</button>
+      </div>
+
+      <!-- Offline Hinting Pass & Play Interface -->
+      <div id="offline-hinting-panel" style="display: none; margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px; flex-direction: column;">
+        <div class="panel-title" style="text-align: center; color: var(--accent-yellow); margin-bottom: 12px; font-size: 0.9rem; letter-spacing: 1px; text-transform: uppercase;">🔊 Speak hints out loud!</div>
+        
+        <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+          <button class="btn btn-danger btn-sm" id="btn-offline-violation" style="flex: 1; font-size: 0.75rem; padding: 8px 5px;">⚠️ Constraint Violated (-20)</button>
+          <button class="btn btn-secondary btn-sm" id="btn-offline-pass" style="flex: 1; font-size: 0.75rem; padding: 8px 5px;">⏭️ Nobody Guessed (-50)</button>
+        </div>
+
+        <div class="panel-title" style="font-size: 0.8rem; margin-bottom: 8px; text-transform: uppercase; color: var(--text-muted);">Tap who guessed correctly:</div>
+        <div id="offline-guesser-buttons" style="display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto;">
+          <!-- Populated with guesser buttons -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Screen 4b: Guesser Interface -->
+    <section class="screen" id="screen-guessing">
+      <div class="game-header">
+        <span class="round-indicator">ROUND <span class="current-round-number">1</span> OF <span class="max-rounds-number">5</span></span>
+        <span class="category-badge" id="guessing-category">Category</span>
+      </div>
+
+      <div class="constraint-card" style="margin-bottom: 15px;">
+        <div class="constraint-icon" id="guessing-constraint-icon">🚫</div>
+        <div class="constraint-info">
+          <span class="constraint-label" id="guessing-constraint-label">The Vowel-Less</span>
+          <span class="constraint-desc" id="guessing-constraint-desc">Hint-giver cannot use E</span>
+        </div>
+      </div>
+
+      <div class="timer-container">
+        <div class="timer-bar" id="guessing-timer-bar"></div>
+      </div>
+
+      <div class="panel-title">Active Hints from Giver (<span id="guess-giver-name">Giver</span>)</div>
+      <div class="hints-feed" id="guessing-feed">
+        <!-- Dynamic hint list -->
+      </div>
+
+      <div class="input-group" id="guesser-input-panel">
+        <label for="guess-input" class="input-label">Your Guess</label>
+        <input type="text" id="guess-input" placeholder="Type guess here..." autocomplete="off">
+        <div class="input-counter-row">
+          <span id="guess-input-status">Submit your answer</span>
+        </div>
+        <button class="btn" id="btn-guess-submit" style="width: 100%;">🎯 Submit Guess</button>
+      </div>
+
+      <div id="guesser-submitted-panel" style="display: none; text-align: center; margin: 15px 0;">
+        <span style="font-size: 1.1rem; color: var(--neon-mint); font-weight: bold;">✓ Guess Submitted!</span>
+        <p style="font-size: 0.85rem; margin-top: 5px;">Waiting for other players or timer...</p>
+      </div>
+
+      <div id="spectator-indicator-panel" style="display: none; text-align: center; margin: 15px 0; border: 1px dashed var(--neon-mint); border-radius: 12px; padding: 10px;">
+        <span style="font-size: 1.0rem; color: var(--neon-mint); font-weight: bold;">👀 SPECTATOR MODE</span>
+        <p style="font-size: 0.8rem; margin-top: 5px;">Target word: <strong id="spectator-target-word" style="color: var(--accent-yellow);">---</strong></p>
+      </div>
+
+      <div class="panel-title">Live Guesses Streams</div>
+      <div class="guesses-stream" id="guesses-stream">
+        <!-- Other players guesses shown blurred or unblurred if spectator -->
+      </div>
+
+      <div class="reaction-container" id="reaction-panel">
+        <button class="reaction-btn" data-emoji="🔥">🔥</button>
+        <button class="reaction-btn" data-emoji="😂">😂</button>
+        <button class="reaction-btn" data-emoji="💀">💀</button>
+        <button class="reaction-btn" data-emoji="😮">😮</button>
+        <button class="reaction-btn" data-emoji="👏">👏</button>
+      </div>
+    </section>
+
+    <!-- Screen 5: Round Results -->
+    <section class="screen" id="screen-results">
+      <h2>Round Complete</h2>
+
+      <div class="results-word-reveal" id="results-word-reveal">
+        Target: <span id="results-target-word-val">Gully Cricket</span>
+      </div>
+
+      <!-- Constraint Voting (Active for Guessers/Spectators) -->
+      <div class="voting-box" id="voting-panel" style="display: none;">
+        <div class="voting-box-title">Was the Hint-Giver's last hint valid?</div>
+        <p id="voting-hint-text" style="font-style: italic; margin-bottom: 12px; font-weight: 500; font-size: 0.95rem;"></p>
+        <div class="voting-buttons">
+          <button class="btn btn-success btn-sm" id="btn-vote-valid">👍 Valid (Yes)</button>
+          <button class="btn btn-danger btn-sm" id="btn-vote-invalid">👎 Violation! (No)</button>
+        </div>
+      </div>
+
+      <div class="voting-box" id="voting-status-panel" style="display: none;">
+        <div class="voting-box-title">Verification Voting</div>
+        <p id="voting-status-text">Valid votes: 0 | Violation votes: 0</p>
+      </div>
+
+      <div class="panel-title">Points Breakdown</div>
+      <div class="score-breakdown-card" id="results-breakdown-list">
+        <!-- Points changes -->
+      </div>
+
+      <div class="panel-title">Leaderboard</div>
+      <div class="leaderboard-list" id="results-leaderboard">
+        <!-- Running score standing -->
+      </div>
+
+      <div style="text-align: center; margin-top: 15px;">
+        <button class="btn btn-success" id="btn-next-round" style="width: 100%; display: none;">Next Round →</button>
+        <p id="results-wait-msg" style="font-style: italic;">Waiting for host to load next round...</p>
+      </div>
+    </section>
+
+    <!-- Screen 6: Game Over -->
+    <section class="screen" id="screen-game-over">
+      <div style="text-align: center; margin-bottom: 1.5rem;">
+        <div style="font-size: 4rem;">🏆</div>
+        <h2>Final Leaderboard</h2>
+        <p>Congratulations to the winners!</p>
+      </div>
+
+      <div class="leaderboard-list" id="gameover-leaderboard">
+        <!-- Final standing with highlighting -->
+      </div>
+
+      <div class="panel-title">Game Recap (Funniest Hints)</div>
+      <div class="hint-history-list" id="gameover-history-list">
+        <!-- Hall of Fame / Fails -->
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 20px;">
+        <button class="btn" id="btn-share-scorecard">📤 Share Score Card</button>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn btn-secondary" id="btn-play-again" style="flex: 1; display: none;">Play Again</button>
+          <button class="btn btn-danger" id="btn-new-game" style="flex: 1;">New Game</button>
+        </div>
+        <p id="gameover-wait-msg" style="text-align: center; font-style: italic; display: none;">Waiting for host to restart...</p>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         LOCAL PLAY MODE SCREENS (prefix: local-)
+         ========================================== -->
+
+    <!-- Local Screen L1: Setup -->
+    <section class="screen" id="screen-local-setup">
+      <div class="local-mode-badge">🏠 LOCAL</div>
+      <div class="game-header" style="margin-bottom: 1rem;">
+        <span class="round-indicator" style="font-size: 1.2rem; color: var(--accent-yellow);">🎙️ Play Local</span>
+        <button class="btn btn-secondary btn-sm" id="btn-local-back-home">✕ Exit</button>
+      </div>
+
+      <div class="panel-title">👥 Players (min 2, max 8)</div>
+      <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+        <input type="text" id="local-player-name-input" placeholder="Player name..." maxlength="16" style="flex: 1; padding: 8px 12px; font-size: 0.9rem; border-radius: 8px;">
+        <button class="btn btn-success btn-sm" id="btn-local-add-player" style="padding: 8px 14px;">+ ADD</button>
+      </div>
+      <p id="local-name-error" style="color: var(--hot-coral); font-size: 0.8rem; margin-bottom: 6px; display: none;"></p>
+      <div id="local-players-list" style="display: flex; flex-wrap: wrap; gap: 8px; min-height: 40px; margin-bottom: 16px; background: rgba(0,0,0,0.2); border-radius: 10px; padding: 10px;">
+        <!-- Player chips rendered here -->
+      </div>
+
+      <div class="panel-title" style="margin-top: 8px;">⚙️ Game Settings</div>
+      <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 120px;">
+          <label class="input-label" style="font-size: 0.7rem;">Rounds</label>
+          <select id="local-select-rounds" style="padding: 6px 10px; font-size: 0.85rem;">
+            <option value="3">3 Rounds</option>
+            <option value="5" selected>5 Rounds</option>
+            <option value="7">7 Rounds</option>
+          </select>
+        </div>
+        <div style="flex: 1; min-width: 120px;">
+          <label class="input-label" style="font-size: 0.7rem;">Timer</label>
+          <select id="local-select-timer" style="padding: 6px 10px; font-size: 0.85rem;">
+            <option value="15" selected>15 Seconds</option>
+            <option value="30">30 Seconds</option>
+            <option value="45">45 Seconds</option>
+          </select>
+        </div>
+        <div style="flex: 1; min-width: 120px;">
+          <label class="input-label" style="font-size: 0.7rem;">Max Hints</label>
+          <select id="local-select-hints" style="padding: 6px 10px; font-size: 0.85rem;">
+            <option value="2">2 Hints</option>
+            <option value="3" selected>3 Hints</option>
+            <option value="5">5 Hints</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="panel-title" style="margin-top: 8px;">📂 Categories</div>
+      <div class="category-grid" id="local-category-grid">
+        <!-- Chips rendered by JS -->
+      </div>
+      <p class="category-hint">Tap to select / deselect.</p>
+
+      <button class="btn btn-success" id="btn-local-start" style="width: 100%; margin-top: 16px;" disabled>
+        🚀 Start Local Game
+      </button>
+    </section>
+
+    <!-- Local Screen L2: Pass the Device Handoff -->
+    <section class="screen" id="screen-local-handoff">
+      <div class="local-mode-badge">🏠 LOCAL</div>
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 20px;">
+        <div style="font-size: 3rem;">📱</div>
+        <p style="font-size: 1rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px;">Pass the device to</p>
+        <div style="font-family: var(--font-headings); font-size: 2.5rem; color: var(--accent-yellow); text-shadow: 0 0 15px var(--accent-yellow-glow);" id="local-handoff-name">SHUBHAM</div>
+        <p style="font-size: 1rem; color: var(--neon-mint);">You are the Hint-Giver this round!</p>
+        <p style="font-size: 0.85rem; color: var(--text-muted);">Everyone else: look away 👀</p>
+        <div style="background: rgba(255,214,10,0.05); border: 1px solid var(--glass-border); border-radius: 12px; padding: 10px 16px; font-size: 0.8rem; color: var(--text-muted);">
+          Round <span id="local-handoff-round">1</span> of <span id="local-handoff-maxrounds">5</span>
+        </div>
+        <button class="btn btn-success" id="btn-local-i-have-device" style="width: 100%; max-width: 320px; font-size: 1rem; padding: 16px;">
+          ✅ I have the device — show my word
+        </button>
+      </div>
+    </section>
+
+    <!-- Local Screen L3: Secret Peek (Hint-Giver only) -->
+    <section class="screen" id="screen-local-peek">
+      <div class="local-mode-badge">🏠 LOCAL</div>
+      <div class="peek-screen">
+        <div class="peek-eyes-only">👁️ YOUR SECRET WORD — EYES ONLY</div>
+        <div style="margin: 16px 0;">
+          <p style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">Category</p>
+          <span class="category-badge" style="font-size: 1rem; padding: 6px 16px;" id="local-peek-category">Cricket & Gully Games</span>
+        </div>
+        <div class="peek-word-box">
+          <div id="local-peek-word" style="font-family: var(--font-headings); font-size: 2.2rem; color: var(--accent-yellow); letter-spacing: 2px;">GULLY CRICKET</div>
+        </div>
+        <div class="constraint-card" style="margin-top: 16px; max-width: 380px;">
+          <div class="constraint-icon" id="local-peek-constraint-icon">☝️</div>
+          <div class="constraint-info">
+            <span class="constraint-label" id="local-peek-constraint-label">The One-Word Wonder</span>
+            <span class="constraint-desc" id="local-peek-constraint-desc">Your entire hint must be ONE word only</span>
+          </div>
+        </div>
+        <div style="font-size: 0.8rem; color: var(--text-muted); text-align: left; max-width: 340px; margin-top: 12px; line-height: 1.7;">
+          ⚠️ Max <strong id="local-peek-max-hints">3</strong> hints this round<br>
+          ⚠️ Do NOT say the word or any part of it<br>
+          ⚠️ Do NOT show this screen to others
+        </div>
+        <div style="margin-top: 16px; font-size: 1.2rem; color: var(--hot-coral); font-family: var(--font-headings);">
+          Auto-hiding in <span id="local-peek-countdown">5</span>s
+        </div>
+        <button class="btn btn-danger" id="btn-local-ready-hide" style="width: 100%; max-width: 320px; margin-top: 12px;">
+          🔒 I'm ready — hide the word
+        </button>
+      </div>
+    </section>
+
+    <!-- Local Screen L4: Active Hint-Giver Screen -->
+    <section class="screen" id="screen-local-hinting">
+      <div class="local-mode-badge">🏠 LOCAL</div>
+      <div class="game-header">
+        <span class="round-indicator">ROUND <span id="local-hint-round">1</span>/<span id="local-hint-maxrounds">5</span></span>
+        <span class="category-badge" id="local-hint-category">Category</span>
+      </div>
+
+      <div class="target-word-panel">
+        <div class="input-label" style="font-size: 0.75rem; margin-bottom: 4px;">Your Secret Word</div>
+        <div class="target-word-val" id="local-hint-word">GULLY CRICKET</div>
+      </div>
+
+      <div class="constraint-card">
+        <div class="constraint-icon" id="local-hint-constraint-icon">☝️</div>
+        <div class="constraint-info">
+          <span class="constraint-label" id="local-hint-constraint-label">The One-Word Wonder</span>
+          <span class="constraint-desc" id="local-hint-constraint-desc">One word only</span>
+        </div>
+      </div>
+
+      <div class="timer-container">
+        <div class="timer-bar" id="local-hint-timer-bar"></div>
+      </div>
+      <p style="font-size: 0.75rem; color: var(--text-muted); text-align: right; margin-top: -10px; margin-bottom: 10px;">
+        ⏱ <span id="local-hint-timer-label">15</span>s | Hint <span id="local-hint-num">1</span>/<span id="local-hint-max">3</span>
+      </p>
+
+      <div class="hints-feed" id="local-hint-history" style="min-height: 80px;">
+        <!-- Previous hints -->
+      </div>
+
+      <div class="input-group" style="margin-top: 10px;">
+        <label for="local-hint-input" class="input-label">Type Hint #<span id="local-hint-num2">1</span></label>
+        <input type="text" id="local-hint-input" placeholder="Type your hint..." autocomplete="off" style="font-size: 1.1rem;">
+        <div class="input-counter-row">
+          <span id="local-hint-char-count">0 chars</span>
+          <span class="validation-feedback invalid" id="local-hint-validation">Empty hint</span>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px;">
+        <button class="btn btn-success" id="btn-local-send-hint" disabled style="flex: 2; font-size: 1rem;">🚀 Send Hint</button>
+        <button class="btn btn-secondary btn-sm" id="btn-local-pass" style="flex: 1; font-size: 0.85rem;">⏭️ Pass (-50)</button>
+      </div>
+    </section>
+
+    <!-- Local Screen L5: Guessers' View -->
+    <section class="screen" id="screen-local-guessing">
+      <div class="local-mode-badge">🏠 LOCAL</div>
+      <div class="game-header">
+        <span class="round-indicator">ROUND <span id="local-guess-round">1</span>/<span id="local-guess-maxrounds">5</span></span>
+        <span class="category-badge" id="local-guess-category">Category</span>
+      </div>
+
+      <div class="constraint-card" style="margin-bottom: 12px;">
+        <div class="constraint-icon" id="local-guess-constraint-icon">☝️</div>
+        <div class="constraint-info">
+          <span class="constraint-label" id="local-guess-constraint-label">The One-Word Wonder</span>
+          <span class="constraint-desc" id="local-guess-constraint-desc">One word only</span>
+        </div>
+      </div>
+
+      <div class="timer-container">
+        <div class="timer-bar" id="local-guess-timer-bar"></div>
+      </div>
+      <p style="font-size: 0.75rem; color: var(--text-muted); text-align: right; margin-top: -10px; margin-bottom: 10px;">
+        ⏱ <span id="local-guess-timer-label">15</span>s remaining
+      </p>
+
+      <div class="panel-title">💬 Hints from <span id="local-guess-giver-name">Shubham</span></div>
+      <div class="hints-feed" id="local-guess-hints-feed" style="min-height: 80px; max-height: 160px;">
+        <!-- Hint bubbles -->
+      </div>
+
+      <div class="input-group" style="margin-top: 10px;">
+        <label class="input-label">Who is guessing?</label>
+        <select id="local-guess-player-select" style="padding: 8px 12px; font-size: 0.9rem;">
+          <!-- Options populated by JS -->
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label for="local-guess-input" class="input-label">Their Guess</label>
+        <input type="text" id="local-guess-input" placeholder="Type the guess..." autocomplete="off" style="font-size: 1.1rem;">
+      </div>
+      <p id="local-guess-wrong-msg" style="color: var(--hot-coral); font-size: 0.85rem; text-align: center; display: none; margin-bottom: 8px;">❌ Wrong! Try again or ask for another hint.</p>
+
+      <div style="display: flex; gap: 10px;">
+        <button class="btn btn-success" id="btn-local-submit-guess" style="flex: 2; font-size: 1rem;">✅ Submit Guess</button>
+        <button class="btn btn-secondary btn-sm" id="btn-local-add-hint" style="flex: 1.2; font-size: 0.8rem; display: none;">➕ Add Hint</button>
+      </div>
+    </section>
+
+    <!-- Local Screen L6: Round Result -->
+    <section class="screen" id="screen-local-round-result">
+      <div class="local-mode-badge">🏠 LOCAL</div>
+      <h2 style="text-align: center; margin-bottom: 8px;">Round Over!</h2>
+
+      <div class="results-word-reveal" style="margin: 12px 0;">
+        🎯 <span id="local-result-word">GULLY CRICKET</span>
+      </div>
+
+      <div id="local-result-message" style="text-align: center; padding: 14px; border-radius: 16px; margin-bottom: 16px; font-size: 1rem; background: rgba(0,245,212,0.08); border: 1px solid var(--neon-mint);">
+        <!-- Correct/wrong/pass message filled by JS -->
+      </div>
+
+      <div class="panel-title">📊 Points This Round</div>
+      <div class="score-breakdown-card" id="local-result-breakdown">
+        <!-- Score delta rows -->
+      </div>
+
+      <div class="panel-title">🏅 Current Scores</div>
+      <div class="leaderboard-list" id="local-result-leaderboard">
+        <!-- Scores -->
+      </div>
+
+      <div style="text-align: center; margin-top: 16px; font-size: 0.85rem; color: var(--text-muted);" id="local-result-round-info"></div>
+      <button class="btn btn-success" id="btn-local-next-round" style="width: 100%; margin-top: 12px; font-size: 1.1rem;">▶️ Next Round</button>
+    </section>
+
+    <!-- Local Screen L7: Game Over -->
+    <section class="screen" id="screen-local-game-over">
+      <div class="local-mode-badge">🏠 LOCAL</div>
+      <div style="text-align: center; margin-bottom: 16px;">
+        <div style="font-size: 4rem; animation: floatIcon 2s ease-in-out infinite alternate;">🏆</div>
+        <h2>Game Over!</h2>
+        <p id="local-winner-text" style="font-size: 1.1rem; color: var(--accent-yellow); font-family: var(--font-headings); margin-top: 4px;"></p>
+      </div>
+
+      <div class="panel-title">Final Leaderboard</div>
+      <div class="leaderboard-list" id="local-gameover-leaderboard"></div>
+
+      <div class="panel-title" style="margin-top: 12px;">Best Hint of the Game</div>
+      <div id="local-best-hint" style="background: rgba(255,214,10,0.06); border: 1px solid var(--accent-yellow); border-radius: 12px; padding: 12px; margin-bottom: 16px; font-size: 0.9rem; color: var(--text-main); font-style: italic;"></div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <button class="btn btn-success" id="btn-local-play-again" style="width: 100%;">🔄 Play Again (same players)</button>
+        <button class="btn btn-secondary" id="btn-local-home" style="width: 100%;">🏠 Back to Home</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Overlay: Firebase Credentials Settings -->
+  <div class="overlay" id="settings-overlay">
+    <div class="overlay-content">
+      <button class="close-btn" id="settings-close">&times;</button>
+      <h2 style="font-size: 1.4rem; color: var(--accent-yellow); margin-bottom: 15px;">Firebase Settings</h2>
+      <p style="font-size: 0.8rem; margin-bottom: 15px;">Connect your own Realtime Database to play. The config will be saved locally.</p>
+      
+      <div class="input-group">
+        <label for="cfg-apikey" class="input-label" style="font-size: 0.7rem;">API Key</label>
+        <input type="text" id="cfg-apikey" placeholder="AIzaSy...">
+      </div>
+
+      <div class="input-group">
+        <label for="cfg-authdomain" class="input-label" style="font-size: 0.7rem;">Auth Domain</label>
+        <input type="text" id="cfg-authdomain" placeholder="project-id.firebaseapp.com">
+      </div>
+
+      <div class="input-group">
+        <label for="cfg-dburl" class="input-label" style="font-size: 0.7rem;">Database URL</label>
+        <input type="text" id="cfg-dburl" placeholder="https://project-id-default-rtdb.firebaseio.com">
+      </div>
+
+      <div class="input-group">
+        <label for="cfg-projectid" class="input-label" style="font-size: 0.7rem;">Project ID</label>
+        <input type="text" id="cfg-projectid" placeholder="project-id">
+      </div>
+
+      <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button class="btn btn-success btn-sm" id="btn-cfg-save" style="flex: 1;">Save Settings</button>
+        <button class="btn btn-danger btn-sm" id="btn-cfg-reset" style="flex: 0.5;">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load PWA Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      if (isLocalhost) {
+        // Unregister service worker locally so development changes load instantly
+        navigator.serviceWorker.getRegistrations().then(regs => {
+          regs.forEach(r => {
+            r.unregister();
+            console.log('Local Service Worker unregistered.');
+          });
+        });
+      } else {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('Service Worker registered!'))
+            .catch(err => console.log('Service Worker registration failed:', err));
+        });
+      }
+    }
+  </script>
+
+  <!-- ES6 App Controller script -->
+  <script type="module" src="app.js"></script>
+
+</body>
+</html>

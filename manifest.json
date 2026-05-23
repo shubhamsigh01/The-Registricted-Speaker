@@ -1,0 +1,18 @@
+{
+  "name": "The Restricted Speaker",
+  "short_name": "Restricted Speaker",
+  "description": "A real-time multiplayer party word-guessing game with crazy linguistic constraints.",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0A1128",
+  "theme_color": "#FFD60A",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

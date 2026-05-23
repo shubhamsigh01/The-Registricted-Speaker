@@ -350,10 +350,6 @@ function bindUIEvents() {
 
   // Local Setup Screen Events
   document.getElementById("btn-local-back-home").addEventListener("click", exitLocalMode);
-  document.getElementById("btn-local-add-player").addEventListener("click", localAddPlayer);
-  document.getElementById("local-player-name-input").addEventListener("keypress", (e) => {
-    if (e.key === "Enter") localAddPlayer();
-  });
   document.getElementById("btn-local-start").addEventListener("click", startLocalGame);
 
   // Local Handoff
@@ -2122,52 +2118,13 @@ let localGame = {
 function localUpdateStartBtn() {
   const btn = document.getElementById("btn-local-start");
   const catSelected = document.querySelectorAll("#local-category-grid .cat-chip.selected").length;
-  btn.disabled = localGame.players.length < 2 || catSelected === 0;
-}
-
-function localRenderPlayers() {
-  const list = document.getElementById("local-players-list");
-  list.innerHTML = "";
-  localGame.players.forEach((p, idx) => {
-    const chip = document.createElement("div");
-    chip.className = "local-player-chip";
-    chip.innerHTML = `${p.name} <button class="chip-remove" onclick="localRemovePlayer(${idx})">✕</button>`;
-    list.appendChild(chip);
-  });
-  localUpdateStartBtn();
-}
-
-window.localRemovePlayer = function(idx) {
-  localGame.players.splice(idx, 1);
-  localRenderPlayers();
-};
-
-function localAddPlayer() {
-  const input = document.getElementById("local-player-name-input");
-  const errEl = document.getElementById("local-name-error");
-  const name = input.value.trim().substring(0, 16);
-  errEl.style.display = "none";
-  if (!name) return;
-  if (localGame.players.length >= 8) {
-    errEl.textContent = "Maximum 8 players allowed!";
-    errEl.style.display = "block";
-    return;
-  }
-  if (localGame.players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
-    errEl.textContent = "That name is already taken!";
-    errEl.style.display = "block";
-    return;
-  }
-  localGame.players.push({ name, score: 0 });
-  input.value = "";
-  input.focus();
-  localRenderPlayers();
+  btn.disabled = catSelected === 0;
 }
 
 // ---- Mode Entry/Exit ----
 function startLocalMode() {
   confettiSystem.stop();
-  localGame.players = [];
+  localGame.players = [{ name: "Guesser", score: 0 }];
   localGame.phase = "setup";
 
   // Render category chips for local setup
@@ -2191,7 +2148,7 @@ function startLocalMode() {
     grid.appendChild(btn);
   });
 
-  localRenderPlayers();
+  localUpdateStartBtn();
   showScreen("local-setup");
 }
 
@@ -2204,22 +2161,15 @@ function exitLocalMode() {
 
 // ---- Game Start ----
 function startLocalGame() {
-  localGame.maxRounds = parseInt(document.getElementById("local-select-rounds").value) || 5;
+  localGame.maxRounds = 1;
   localGame.timerDuration = parseInt(document.getElementById("local-select-timer").value) || 15;
-  localGame.maxHints = parseInt(document.getElementById("local-select-hints").value) || 3;
   localGame.selectedCategories = getSelectedChips("local-category-grid");
   if (localGame.selectedCategories.length === 0) localGame.selectedCategories = Object.keys(CATEGORIES);
 
-  // Shuffle player order
-  for (let i = localGame.players.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [localGame.players[i], localGame.players[j]] = [localGame.players[j], localGame.players[i]];
-  }
-
+  localGame.players = [{ name: "Guesser", score: 0 }];
   localGame.currentRound = 0;
   localGame.currentHintGiverIndex = 0;
   localGame.allHintHistory = [];
-  localGame.players.forEach(p => p.score = 0);
 
   startLocalRound();
 }

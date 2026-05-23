@@ -83,6 +83,45 @@ export const CATEGORIES = {
     "Relative Aunty", "Dulha Missing", "Sangeet Practice", "Mehndi Night",
     "Photographer Chase", "Flower Decoration", "Wedding Cake Cut",
     "Shaadi Buffet", "Haldi Ceremony", "Vidaai Crying", "Ring Ceremony"
+  ],
+
+  "TV & Cartoons": [
+    "Taarak Mehta Ka Ooltah Chashmah", "Shin Chan", "Doraemon", "Jethalal", "Bhide", 
+    "Babita Ji", "Nobita", "Shizuka", "Tom and Jerry India dub", "Motu Patlu", 
+    "Daya Ben", "Shaktimaan", "Chhota Bheem", "Shakalaka Boom Boom", "Takeshi Castle", 
+    "Hatim", "Shararat", "Son Pari", "CID ACP Pradyuman", "Daya Darwaza Tod", 
+    "Tapu Sena", "Oswald"
+  ],
+
+  "JEE/NEET Trauma": [
+    "Drop year", "Allen coaching", "mock test", "percentile", "revision notes", 
+    "Kota factory", "doubt session", "PYQ", "rank predictor", "cut-off", 
+    "HC Verma", "Irodov Physics", "Inorganic Chemistry", "Dummy school", "OMR Sheet bubble", 
+    "Rank 1 dream", "Physics Wallah", "Test Series", "Late night study", "Board exam vs JEE", 
+    "Formula sheet", "Calculation mistake"
+  ],
+
+  "Delhi Slang": [
+    "Bhai sun", "Teri toh", "Kya scene hai", "Setting karna", "Jugaad", 
+    "Yaar sach mein", "Full on", "Patao", "Ghanta", "Bindaas", 
+    "Oye hoye", "Sahi hai", "Dilli se hu bc", "Chakhna", "Gedi maarna", 
+    "Vibe hai", "System hang", "Gazab", "Faltu ka", "Bawal", 
+    "Chilla-chilli", "Scene sorted"
+  ],
+
+  "Hostel Moments": [
+    "Midnight Maggi", "Proxy attendance", "WiFi password", "Mess food", "Laundry pile", 
+    "Room inspection", "Seniors ragging", "Night canteen", "Extension cord", "Bunk lecture", 
+    "Shared washroom", "Exam night prep", "Chai and smoke", "Roommate snore", "Cupboard lock", 
+    "Bucket bath", "Ketli tea", "Warden warning", "Mess token", "Borrowed iron"
+  ],
+
+  "Indian Parents": [
+    "Report card", "Sharma ji ka beta", "Log kya kahenge", "Doctor ya engineer", "Rishta", 
+    "Ghar ka khana", "Curfew", "Pocket money", "Relatives visit", "Board exams", 
+    "Bad handwriting", "Switch off the AC", "Early morning wake up", "Phone use lecture", "Gold medalist relative", 
+    "Shaadi in family", "Grocery list helper", "WhatsApp forward warning", "Career guidance", "Tiffin box back home", 
+    "Dhaniya shopping", "Melodramatic mom"
   ]
 };
 

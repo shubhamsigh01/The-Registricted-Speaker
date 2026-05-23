@@ -381,40 +381,14 @@
         <button class="btn btn-secondary btn-sm" id="btn-local-back-home">✕ Exit</button>
       </div>
 
-      <div class="panel-title">👥 Players (min 2, max 8)</div>
-      <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-        <input type="text" id="local-player-name-input" placeholder="Player name..." maxlength="16" style="flex: 1; padding: 8px 12px; font-size: 0.9rem; border-radius: 8px;">
-        <button class="btn btn-success btn-sm" id="btn-local-add-player" style="padding: 8px 14px;">+ ADD</button>
-      </div>
-      <p id="local-name-error" style="color: var(--hot-coral); font-size: 0.8rem; margin-bottom: 6px; display: none;"></p>
-      <div id="local-players-list" style="display: flex; flex-wrap: wrap; gap: 8px; min-height: 40px; margin-bottom: 16px; background: rgba(0,0,0,0.2); border-radius: 10px; padding: 10px;">
-        <!-- Player chips rendered here -->
-      </div>
-
       <div class="panel-title" style="margin-top: 8px;">⚙️ Game Settings</div>
       <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
-        <div style="flex: 1; min-width: 120px;">
-          <label class="input-label" style="font-size: 0.7rem;">Rounds</label>
-          <select id="local-select-rounds" style="padding: 6px 10px; font-size: 0.85rem;">
-            <option value="3">3 Rounds</option>
-            <option value="5" selected>5 Rounds</option>
-            <option value="7">7 Rounds</option>
-          </select>
-        </div>
         <div style="flex: 1; min-width: 120px;">
           <label class="input-label" style="font-size: 0.7rem;">Timer</label>
           <select id="local-select-timer" style="padding: 6px 10px; font-size: 0.85rem;">
             <option value="15" selected>15 Seconds</option>
             <option value="30">30 Seconds</option>
             <option value="45">45 Seconds</option>
-          </select>
-        </div>
-        <div style="flex: 1; min-width: 120px;">
-          <label class="input-label" style="font-size: 0.7rem;">Max Hints</label>
-          <select id="local-select-hints" style="padding: 6px 10px; font-size: 0.85rem;">
-            <option value="2">2 Hints</option>
-            <option value="3" selected>3 Hints</option>
-            <option value="5">5 Hints</option>
           </select>
         </div>
       </div>

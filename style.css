@@ -1293,11 +1293,12 @@ input[type="text"]::placeholder {
 
 .charades-word {
   font-family: var(--font-headings);
-  font-size: 3.5rem;
+  font-size: clamp(3rem, 12vw, 8rem);
   font-weight: 900;
-  color: #fff;
-  letter-spacing: 1px;
-  text-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+  letter-spacing: -0.04em;
+  color: #FFD700;
+  text-shadow: 0 4px 20px rgba(255,215,0,0.4);
+  line-height: 1.1;
   margin-bottom: 20px;
   word-break: break-word;
 }
@@ -1381,5 +1382,124 @@ input[type="text"]::placeholder {
 @keyframes flashSkipAnim {
   0% { background-color: rgba(255, 79, 94, 0.4); }
 }
+
+/* Chunk 1 Keyframes & Animations */
+@keyframes slideUp {
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(-100%); opacity: 0; }
+}
+
+@keyframes slideDown {
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(100%); opacity: 0; }
+}
+
+@keyframes slideInBottom {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.slide-up {
+  animation: slideUp 0.2s ease-in forwards;
+}
+
+.slide-down {
+  animation: slideDown 0.2s ease-in forwards;
+}
+
+.slide-in-bottom {
+  animation: slideInBottom 0.2s ease-out forwards;
+}
+
+/* Chunk 4 Cinematic Countdowns */
+.cinematic-zoom {
+  animation: cinematicZoomAnim 0.6s ease-out forwards;
+}
+
+@keyframes cinematicZoomAnim {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Chunk 5 Results Screen Slide Up */
+#results-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: #0d1117;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  box-sizing: border-box;
+  transform: translateY(100%);
+  transition: transform 0.3s ease-out;
+}
+
+#results-screen.active {
+  transform: translateY(0);
+}
+
+/* Chunk 6 Modifiers and Chaos Screen Banners */
+#modifier-banner, #chaos-banner {
+  position: fixed;
+  inset: 0;
+  z-index: 1010;
+  background: rgba(13, 17, 23, 0.95);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+#modifier-banner.active, #chaos-banner.active {
+  display: flex !important;
+}
+
+.modifier-title {
+  font-family: var(--font-headings);
+  font-size: 2.2rem;
+  color: var(--accent-yellow);
+  margin-bottom: 20px;
+  text-transform: uppercase;
+}
+
+.modifier-text {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 15px 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  animation: pulseCard 1.5s infinite alternate;
+}
+
+.chaos-pulse-border {
+  border: 4px solid #00f5d4;
+  box-shadow: 0 0 15px #00f5d4, inset 0 0 15px #00f5d4;
+  animation: chaosBorderPulse 1.5s infinite alternate;
+}
+
+@keyframes chaosBorderPulse {
+  from { box-shadow: 0 0 10px #00f5d4, inset 0 0 10px #00f5d4; }
+  to { box-shadow: 0 0 25px #00f5d4, inset 0 0 25px #00f5d4; }
+}
+
+.tilt-active-badge {
+  font-size: 0.9rem;
+  background: rgba(0, 245, 212, 0.15);
+  border: 1px solid rgba(0, 245, 212, 0.4);
+  color: #00f5d4;
+  padding: 4px 10px;
+  border-radius: 999px;
+  margin-top: 10px;
+}
+
 
 

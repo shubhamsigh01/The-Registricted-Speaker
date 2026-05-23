@@ -470,6 +470,7 @@
             <span id="charades-constraint-text">Constraint description</span>
           </div>
           <div class="charades-score-badge" id="charades-score-badge">0 correct</div>
+          <div class="tilt-active-badge" id="charades-tilt-badge" style="display: none;">📱 Tilt Active</div>
         </div>
 
         <!-- GOT IT — right large button -->
@@ -535,6 +536,44 @@
         <button class="btn btn-secondary" id="btn-local-home" style="width: 100%;">🏠 Back to Home</button>
       </div>
     </section>
+
+    <!-- Round Start Cinematic -->
+    <div id="cinematic-screen">
+      <div id="cinematic-category" style="font-size: 2rem; color: var(--accent-yellow); font-family: var(--font-headings); margin-bottom: 8px; text-transform: uppercase;">CATEGORY</div>
+      <div style="font-size: 1.2rem; color: var(--text-muted); margin-bottom: 20px; font-weight: 500;">Ready?</div>
+      <div id="cinematic-countdown" class="cinematic-num" style="font-size: 8rem; font-family: var(--font-headings); font-weight: 900; color: #fff;">3</div>
+    </div>
+
+    <!-- End of Round Results Screen -->
+    <div id="results-screen">
+      <div class="local-mode-badge" style="position: absolute; top: 15px; left: 15px;">🏠 LOCAL</div>
+      <h1 style="font-family: var(--font-headings); color: var(--accent-yellow); font-size: 2.2rem; margin-bottom: 20px;">ROUND RESULTS</h1>
+      
+      <div style="background: rgba(255,255,255,0.05); padding: 25px 40px; border-radius: 16px; border: 1px solid var(--glass-border); width: 100%; max-width: 400px; box-sizing: border-box; text-align: center; margin-bottom: 24px;">
+        <div style="font-size: 1.5rem; font-weight: 700; margin-bottom: 12px; color: var(--neon-mint);" id="results-correct">✅ 0 Correct</div>
+        <div style="font-size: 1.2rem; font-weight: 500; margin-bottom: 12px; color: var(--hot-coral);" id="results-skipped">⏭ 0 Skipped</div>
+        <div style="font-size: 1.1rem; color: var(--text-muted); margin-bottom: 16px;" id="results-accuracy">Accuracy: 0%</div>
+        <div style="font-size: 1.4rem; font-weight: 900; color: #FFD700; text-transform: uppercase; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;" id="results-rating">Delhi Genius 🧠</div>
+      </div>
+      
+      <div style="display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 400px;">
+        <button class="btn btn-success" id="btn-results-again" style="width:100%; font-size:1.05rem; padding: 12px;">🔄 Play Again</button>
+        <button class="btn btn-primary" id="btn-results-next-cat" style="width:100%; font-size:1.05rem; padding: 12px;">📂 Next Category</button>
+        <button class="btn btn-secondary" id="btn-results-share" style="width:100%; font-size:1.05rem; padding: 12px;">📢 Share Score</button>
+      </div>
+    </div>
+
+    <!-- Modifier Banner Screen -->
+    <div id="modifier-banner">
+      <div class="modifier-title">🔥 CHALLENGE MODIFIER!</div>
+      <div class="modifier-text" id="modifier-banner-text">😶 Act it out silently</div>
+    </div>
+
+    <!-- Chaos Event Banner Screen -->
+    <div id="chaos-banner" class="chaos-pulse-border">
+      <div class="modifier-title" style="color: #00f5d4;">⚡ CHAOS EVENT!</div>
+      <div class="modifier-text" id="chaos-banner-text">🔥 SPEED ROUND: Timer halved!</div>
+    </div>
 
   </main>
 

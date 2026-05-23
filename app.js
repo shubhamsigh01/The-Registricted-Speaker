@@ -9,6 +9,20 @@ import { ref, set, get, update, onValue, push, remove, runTransaction, onDisconn
 import { CONSTRAINTS, validateHint } from "./constraints.js";
 import { CATEGORIES, getRandomWord, getRandomCategory, parseCustomWords } from "./wordbank.js";
 
+// --- Category Themes, Modifiers & Chaos Events Config ---
+const CATEGORY_THEMES = {
+  "Bollywood & Memes": { emoji:"🎬", gradient:"linear-gradient(135deg,#b8860b,#c0392b)" },
+  "Cricket & Gully Games": { emoji:"🏏", gradient:"linear-gradient(135deg,#1a6b3c,#1a5276)" },
+  "Indian Street Food": { emoji:"🍛", gradient:"linear-gradient(135deg,#e74c3c,#f39c12)" },
+  "School Life": { emoji:"📚", gradient:"linear-gradient(135deg,#8e44ad,#6c3483)" },
+  "Indian Wedding Chaos": { emoji:"💒", gradient:"linear-gradient(135deg,#ff6b6b,#feca57)" },
+  "TV & Cartoons": { emoji:"📺", gradient:"linear-gradient(135deg,#fd79a8,#6c5ce7)" },
+  "JEE/NEET Trauma": { emoji:"😭", gradient:"linear-gradient(135deg,#636e72,#2d3436)" },
+  "Delhi Slang": { emoji:"🗣️", gradient:"linear-gradient(135deg,#00cec9,#0984e3)" }
+};
+const MODIFIERS = ["🎤 Speak like a politician","🤫 Whisper only","🎵 Sing your hints","😶 Act it out silently","🤐 No English words"];
+const CHAOS_EVENTS = ["⚡ Everyone must clap while guessing!","🔥 SPEED ROUND: Timer halved!","😂 Hint-giver uses sound effects only!","🕺 Hint-giver must dance while hinting!"];
+
 // --- Game State Globals ---
 let myUid = null;
 let myName = "";
@@ -2154,13 +2168,20 @@ function startLocalMode() {
 
 function exitLocalMode() {
   stopLocalTimer();
+  disableTilt();
   confettiSystem.stop();
+  document.body.style.background = ""; // Restore default background style
   localGame = { ...localGame, players: [], phase: "setup", currentRound: 0, allHintHistory: [] };
   showScreen("home");
 }
 
 // ---- Game Start ----
 function startLocalGame() {
+  // Fullscreen
+  if (document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  }
+
   localGame.maxRounds = 1;
   localGame.timerDuration = parseInt(document.getElementById("local-select-timer").value) || 15;
   localGame.selectedCategories = getSelectedChips("local-category-grid");
@@ -2170,6 +2191,10 @@ function startLocalGame() {
   localGame.currentRound = 0;
   localGame.currentHintGiverIndex = 0;
   localGame.allHintHistory = [];
+  localGame.consecutiveCorrect = 0;
+  
+  // Request tilt controls
+  requestTiltPermission();
 
   startLocalRound();
 }
@@ -2195,6 +2220,183 @@ function showLocalHandoff() {
   showScreen("local-handoff");
 }
 
+// ---- Chunk 3: Sound Design ----
+function playSound(type) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    const sounds = { correct:[880,'sine',0.15], skip:[220,'sawtooth',0.12], tick:[440,'sine',0.08], go:[1046,'sine',0.2], end:[660,'sine',0.6] };
+    const [freq, type2, dur] = sounds[type];
+    o.frequency.value = freq; o.type = type2;
+    g.gain.setValueAtTime(0.3, 0);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    o.start(); o.stop(ctx.currentTime + dur);
+  } catch (e) {
+    console.warn("AudioContext blocked or not supported: ", e);
+  }
+}
+
+// ---- Chunk 2: Tilt Controls ----
+let tiltActive = false;
+let lastTiltTime = 0;
+
+function requestTiltPermission() {
+  if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+    DeviceOrientationEvent.requestPermission()
+      .then(state => {
+        if (state === 'granted') {
+          enableTilt();
+        } else {
+          disableTilt();
+        }
+      })
+      .catch(() => {
+        disableTilt();
+      });
+  } else {
+    enableTilt();
+  }
+}
+
+function enableTilt() {
+  tiltActive = true;
+  const badge = document.getElementById("charades-tilt-badge");
+  if (badge) badge.style.display = "block";
+  const skipBtn = document.getElementById("btn-local-skip");
+  const gotBtn = document.getElementById("btn-local-got-it");
+  if (skipBtn) skipBtn.style.display = "none";
+  if (gotBtn) gotBtn.style.display = "none";
+  
+  window.removeEventListener("deviceorientation", handleTiltEvent);
+  window.addEventListener("deviceorientation", handleTiltEvent);
+}
+
+function disableTilt() {
+  tiltActive = false;
+  const badge = document.getElementById("charades-tilt-badge");
+  if (badge) badge.style.display = "none";
+  const skipBtn = document.getElementById("btn-local-skip");
+  const gotBtn = document.getElementById("btn-local-got-it");
+  if (skipBtn) skipBtn.style.display = "flex";
+  if (gotBtn) gotBtn.style.display = "flex";
+  
+  window.removeEventListener("deviceorientation", handleTiltEvent);
+}
+
+function handleTiltEvent(event) {
+  if (localGame.phase !== "charades" || !tiltActive) return;
+  const now = Date.now();
+  if (now - lastTiltTime < 800) return;
+
+  if (event.beta > 25) {
+    lastTiltTime = now;
+    localGotIt();
+  } else if (event.beta < -25) {
+    lastTiltTime = now;
+    localSkip();
+  }
+}
+
+// ---- Chunk 4 & 6: Round Cinematic & Chaos Events ----
+function checkAndRunRoundStart() {
+  localGame.totalRoundsPlayed = (localGame.totalRoundsPlayed || 0) + 1;
+  if (localGame.totalRoundsPlayed % 3 === 0) {
+    triggerChaosEvent();
+  } else {
+    runLocalCinematic();
+  }
+}
+
+function triggerChaosEvent() {
+  const chaos = CHAOS_EVENTS[Math.floor(Math.random() * CHAOS_EVENTS.length)];
+  const banner = document.getElementById("chaos-banner");
+  document.getElementById("chaos-banner-text").textContent = chaos;
+  
+  localGame.isSpeedRound = false;
+  const originalTimer = localGame.timerDuration;
+  
+  if (chaos.includes("SPEED ROUND")) {
+    localGame.isSpeedRound = true;
+    localGame.timerDuration = Math.round(originalTimer / 2);
+  }
+
+  banner.style.display = "flex";
+  banner.classList.add("active");
+
+  setTimeout(() => {
+    banner.classList.remove("active");
+    banner.style.display = "none";
+    runLocalCinematic(() => {
+      if (localGame.isSpeedRound) {
+        localGame.timerDuration = originalTimer;
+      }
+    });
+  }, 3000);
+}
+
+function runLocalCinematic(onFinish) {
+  const screen = document.getElementById("cinematic-screen");
+  const countEl = document.getElementById("cinematic-countdown");
+  const catEl = document.getElementById("cinematic-category");
+
+  catEl.textContent = localGame.currentCategory.toUpperCase();
+  screen.style.display = "flex";
+  screen.style.background = "#0d1117";
+
+  let step = 3;
+  
+  function showStep() {
+    if (step > 0) {
+      countEl.textContent = step;
+      countEl.classList.remove("cinematic-zoom");
+      void countEl.offsetWidth; // trigger reflow
+      countEl.classList.add("cinematic-zoom");
+      playSound('tick');
+      step--;
+      setTimeout(showStep, 800);
+    } else {
+      // GO!
+      countEl.textContent = "GO!";
+      countEl.classList.remove("cinematic-zoom");
+      void countEl.offsetWidth; // trigger reflow
+      countEl.classList.add("cinematic-zoom");
+      
+      // White flash
+      screen.style.background = "#fff";
+      setTimeout(() => {
+        screen.style.background = "#0d1117";
+      }, 150);
+
+      if (navigator.vibrate) navigator.vibrate(200);
+      playSound('go');
+
+      setTimeout(() => {
+        screen.style.display = "none";
+        showLocalCharades();
+        if (onFinish) onFinish();
+      }, 400);
+    }
+  }
+  showStep();
+}
+
+function triggerModifierOverlay() {
+  const mod = MODIFIERS[Math.floor(Math.random() * MODIFIERS.length)];
+  const banner = document.getElementById("modifier-banner");
+  document.getElementById("modifier-banner-text").textContent = mod;
+  
+  banner.style.display = "flex";
+  banner.classList.add("active");
+  if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+
+  setTimeout(() => {
+    banner.classList.remove("active");
+    banner.style.display = "none";
+    resumeTimer();
+  }, 2000);
+}
+
 // ---- L3: Peek / Ready Screen ----
 function showLocalPeek() {
   // Pick word and constraint for this round
@@ -2215,18 +2417,19 @@ function showLocalPeek() {
     countEl.textContent = countdown;
     if (countdown <= 0) {
       clearInterval(peekInterval);
-      showLocalCharades();
+      checkAndRunRoundStart();
     }
   }, 1000);
 
   document.getElementById("btn-local-ready-hide").onclick = () => {
     clearInterval(peekInterval);
-    showLocalCharades();
+    checkAndRunRoundStart();
   };
 
   showScreen("local-peek");
 }
 
+// ---- L4: Charades Screen (replaces Hinting + Guessing) ----
 // ---- L4: Charades Screen (replaces Hinting + Guessing) ----
 function showLocalCharades() {
   stopLocalTimer();
@@ -2234,6 +2437,14 @@ function showLocalCharades() {
 
   const giver = localGame.players[localGame.currentHintGiverIndex];
   const c = localGame.currentConstraint;
+
+  // Apply theme background gradient
+  const theme = CATEGORY_THEMES[localGame.currentCategory];
+  if (theme && theme.gradient) {
+    document.body.style.background = theme.gradient;
+  } else {
+    document.body.style.background = "linear-gradient(135deg, var(--bg-main), var(--bg-secondary))";
+  }
 
   // Top bar
   document.getElementById("charades-round-label").textContent =
@@ -2253,10 +2464,8 @@ function showLocalCharades() {
 
   // Timer bar reset
   const fill = document.getElementById("charades-timer-fill");
-  const arrow = document.getElementById("charades-timer-arrow");
   fill.style.width = "100%";
   fill.classList.remove("timer-critical");
-  arrow.classList.remove("timer-critical");
 
   showScreen("local-hinting");
 
@@ -2268,35 +2477,41 @@ function showLocalCharades() {
       fill.style.width = pct + "%";
       if (rem <= Math.floor(localGame.timerDuration * 0.25)) {
         fill.classList.add("timer-critical");
-        arrow.classList.add("timer-critical");
       }
     },
     () => {
-      // Time ran out
       endLocalCharadesRound();
     }
   );
 }
 
-function loadNextCharadesWord() {
-  // Pick a fresh word from the same category
+function loadNextCharadesWordNoAnim() {
   const usedWords = localGame.allHintHistory.map(h => h.word);
   localGame.targetWord = getRandomWord(localGame.currentCategory, null, usedWords);
-
   document.getElementById("charades-word").textContent = localGame.targetWord.toUpperCase();
-
-  // Animate word change
-  const wordEl = document.getElementById("charades-word");
-  wordEl.classList.add("word-flash");
-  setTimeout(() => wordEl.classList.remove("word-flash"), 400);
-
-  // Update score badge
-  document.getElementById("charades-score-badge").textContent =
-    `${localGame.wordsCorrect} correct`;
+  document.getElementById("charades-score-badge").textContent = `${localGame.wordsCorrect} correct`;
 }
 
 function localGotIt() {
+  if (localGame.phase !== "charades") return;
   stopLocalTimer();
+
+  // Play correct sound
+  playSound('correct');
+
+  const wordEl = document.getElementById("charades-word");
+  wordEl.classList.remove("slide-in-bottom", "slide-up", "slide-down");
+  void wordEl.offsetWidth; // force reflow
+  wordEl.classList.add("slide-up");
+
+  // flash background
+  const originalBg = document.body.style.background;
+  document.body.style.background = '#00ff0033';
+  setTimeout(() => {
+    document.body.style.background = originalBg;
+  }, 150);
+
+  if (navigator.vibrate) navigator.vibrate(80);
 
   const giver = localGame.players[localGame.currentHintGiverIndex];
   const pts = 100;
@@ -2308,48 +2523,69 @@ function localGotIt() {
   // Log for game history
   localGame.allHintHistory.push({ word: localGame.targetWord, giver: giver.name });
 
-  // Flash feedback
-  const btn = document.getElementById("btn-local-got-it");
-  btn.classList.add("charades-flash-success");
-  setTimeout(() => btn.classList.remove("charades-flash-success"), 300);
+  // Increment consecutive correct answers
+  localGame.consecutiveCorrect = (localGame.consecutiveCorrect || 0) + 1;
 
-  confettiSystem.start();
-  setTimeout(() => { confettiSystem.stop(); }, 800);
+  // Trigger modifier after every 5 consecutive correct answers
+  const hasModifier = localGame.consecutiveCorrect > 0 && localGame.consecutiveCorrect % 5 === 0;
 
-  // Load next word and keep timer running from where it left off
-  loadNextCharadesWord();
+  setTimeout(() => {
+    // Swap word
+    loadNextCharadesWordNoAnim();
 
-  // Restart timer for remaining time
-  const fill = document.getElementById("charades-timer-fill");
-  const arrow = document.getElementById("charades-timer-arrow");
-  startLocalTimer(
-    localGame.timeRemaining,
-    (rem) => {
-      const pct = (rem / localGame.timerDuration) * 100;
-      fill.style.width = pct + "%";
-      if (rem <= Math.floor(localGame.timerDuration * 0.25)) {
-        fill.classList.add("timer-critical");
-        arrow.classList.add("timer-critical");
-      }
-    },
-    () => endLocalCharadesRound()
-  );
+    wordEl.classList.remove("slide-up");
+    void wordEl.offsetWidth;
+    wordEl.classList.add("slide-in-bottom");
+
+    if (hasModifier) {
+      triggerModifierOverlay();
+    } else {
+      resumeTimer();
+    }
+  }, 200);
 }
 
 function localSkip() {
+  if (localGame.phase !== "charades") return;
   stopLocalTimer();
+
+  // Play skip sound
+  playSound('skip');
+
+  const wordEl = document.getElementById("charades-word");
+  wordEl.classList.remove("slide-in-bottom", "slide-up", "slide-down");
+  void wordEl.offsetWidth; // force reflow
+  wordEl.classList.add("slide-down");
+
+  // flash background
+  const originalBg = document.body.style.background;
+  document.body.style.background = '#ff000033';
+  setTimeout(() => {
+    document.body.style.background = originalBg;
+  }, 150);
+
+  if (navigator.vibrate) navigator.vibrate([40, 30, 40]);
+
   localGame.wordsSkipped++;
   localGame.allHintHistory.push({ word: localGame.targetWord, giver: localGame.players[localGame.currentHintGiverIndex].name });
+  
+  // Reset consecutive correct answers
+  localGame.consecutiveCorrect = 0;
 
-  // Flash feedback
-  const btn = document.getElementById("btn-local-skip");
-  btn.classList.add("charades-flash-skip");
-  setTimeout(() => btn.classList.remove("charades-flash-skip"), 300);
+  setTimeout(() => {
+    // Swap word
+    loadNextCharadesWordNoAnim();
 
-  loadNextCharadesWord();
+    wordEl.classList.remove("slide-down");
+    void wordEl.offsetWidth;
+    wordEl.classList.add("slide-in-bottom");
 
+    resumeTimer();
+  }, 200);
+}
+
+function resumeTimer() {
   const fill = document.getElementById("charades-timer-fill");
-  const arrow = document.getElementById("charades-timer-arrow");
   startLocalTimer(
     localGame.timeRemaining,
     (rem) => {
@@ -2357,7 +2593,6 @@ function localSkip() {
       fill.style.width = pct + "%";
       if (rem <= Math.floor(localGame.timerDuration * 0.25)) {
         fill.classList.add("timer-critical");
-        arrow.classList.add("timer-critical");
       }
     },
     () => endLocalCharadesRound()
@@ -2366,102 +2601,57 @@ function localSkip() {
 
 function endLocalCharadesRound() {
   stopLocalTimer();
-  showLocalRoundResult();
-}
+  disableTilt();
+  
+  // Play end round sound
+  playSound('end');
 
-// ---- L6: Round Result ----
-function showLocalRoundResult() {
-  stopLocalTimer();
-  confettiSystem.stop();
-  localGame.phase = "roundEnd";
+  const correct = localGame.wordsCorrect;
+  const skipped = localGame.wordsSkipped;
+  const total = correct + skipped;
+  const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
 
-  document.getElementById("local-result-word").textContent = localGame.targetWord.toUpperCase();
+  let label = "";
+  if (accuracy >= 90) label = "Sharma Ji Ka Beta 🏆";
+  else if (accuracy >= 70) label = "Delhi Genius 🧠";
+  else if (accuracy >= 50) label = "Traffic Jam Brain 🚗";
+  else if (accuracy >= 30) label = "Absolute Bakchod 💀";
+  else label = "Bhai Soja Thoda 😴";
 
-  const msgDiv = document.getElementById("local-result-message");
-  if (localGame.wordsCorrect > 0) {
-    msgDiv.style.background = "rgba(0,245,212,0.08)";
-    msgDiv.style.borderColor = "var(--neon-mint)";
-    msgDiv.innerHTML = `✅ <strong>${localGame.players[localGame.currentHintGiverIndex].name}</strong> got <strong>${localGame.wordsCorrect}</strong> word${localGame.wordsCorrect !== 1 ? 's' : ''} correct! (+${localGame.wordsCorrect * 100} pts)<br>⏭️ Skipped: ${localGame.wordsSkipped}`;
-  } else {
-    msgDiv.style.background = "rgba(255,79,94,0.08)";
-    msgDiv.style.borderColor = "var(--hot-coral)";
-    msgDiv.innerHTML = `❌ No words guessed! Better luck next round.<br>⏭️ Skipped: ${localGame.wordsSkipped}`;
-  }
+  document.getElementById("results-correct").textContent = `✅ ${correct} Correct`;
+  document.getElementById("results-skipped").textContent = `⏭ ${skipped} Skipped`;
+  document.getElementById("results-accuracy").textContent = `Accuracy: ${accuracy}%`;
+  document.getElementById("results-rating").textContent = label;
 
-  // Score breakdown
-  const breakdown = document.getElementById("local-result-breakdown");
-  breakdown.innerHTML = "";
-  localGame.players.forEach(p => {
-    const delta = localGame.pointsThisRound[p.name] || 0;
-    const row = document.createElement("div");
-    row.className = "score-row";
-    const sign = delta > 0 ? "+" : delta < 0 ? "" : "";
-    const cls = delta > 0 ? "positive" : delta < 0 ? "negative" : "";
-    row.innerHTML = `<span>${p.name}</span><span class="score-change ${cls}">${delta !== 0 ? sign + delta + " pts" : "—"}</span>`;
-    breakdown.appendChild(row);
-  });
+  // Slide up results card
+  const resScreen = document.getElementById("results-screen");
+  resScreen.style.display = "flex";
+  void resScreen.offsetWidth; // force reflow
+  resScreen.classList.add("active");
 
-  // Leaderboard
-  const lb = document.getElementById("local-result-leaderboard");
-  lb.innerHTML = "";
-  [...localGame.players].sort((a, b) => b.score - a.score).forEach((p, i) => {
-    const medals = ["🥇", "🥈", "🥉"];
-    const row = document.createElement("div");
-    row.className = `leaderboard-row ${i === 0 && p.score > 0 ? "winner-row" : ""}`;
-    row.innerHTML = `<div class="leaderboard-player-info"><span class="leaderboard-avatar">${medals[i] || "👤"}</span><span style="font-weight:700">${p.name}</span></div><div class="leaderboard-score">${p.score} pts</div>`;
-    lb.appendChild(row);
-  });
+  // Wire buttons
+  document.getElementById("btn-results-again").onclick = () => {
+    resScreen.classList.remove("active");
+    setTimeout(() => { resScreen.style.display = "none"; }, 300);
+    localPlayAgain();
+  };
 
-  const infoEl = document.getElementById("local-result-round-info");
-  infoEl.textContent = `Round ${localGame.currentRound} of ${localGame.maxRounds}`;
+  document.getElementById("btn-results-next-cat").onclick = () => {
+    resScreen.classList.remove("active");
+    setTimeout(() => { resScreen.style.display = "none"; }, 300);
+    exitLocalMode();
+  };
 
-  const nextBtn = document.getElementById("btn-local-next-round");
-  if (localGame.currentRound >= localGame.maxRounds) {
-    nextBtn.textContent = "🏆 See Final Results";
-  } else {
-    nextBtn.textContent = "▶️ Next Round";
-  }
-
-  showScreen("local-round-result");
-}
-
-function localNextRound() {
-  if (localGame.currentRound >= localGame.maxRounds) {
-    showLocalGameOver();
-  } else {
-    localGame.currentHintGiverIndex = (localGame.currentHintGiverIndex + 1) % localGame.players.length;
-    startLocalRound();
-  }
-}
-
-// ---- L7: Game Over ----
-function showLocalGameOver() {
-  confettiSystem.start();
-  localGame.phase = "gameOver";
-
-  const sorted = [...localGame.players].sort((a, b) => b.score - a.score);
-  const winner = sorted[0];
-  document.getElementById("local-winner-text").textContent = `🎉 WINNER: ${winner.name} with ${winner.score} pts!`;
-
-  const lb = document.getElementById("local-gameover-leaderboard");
-  lb.innerHTML = "";
-  sorted.forEach((p, i) => {
-    const medals = ["🥇", "🥈", "🥉"];
-    const row = document.createElement("div");
-    row.className = `leaderboard-row ${i === 0 ? "winner-row" : ""}`;
-    row.innerHTML = `<div class="leaderboard-player-info"><span class="leaderboard-avatar">${medals[i] || "👤"}</span><span style="font-weight:700">${p.name}</span></div><div class="leaderboard-score">${p.score} pts</div>`;
-    lb.appendChild(row);
-  });
-
-  // Best word this game
-  const bestHintEl = document.getElementById("local-best-hint");
-  if (localGame.allHintHistory.length > 0) {
-    bestHintEl.textContent = `"${localGame.allHintHistory[0].word}" — guessed by ${localGame.allHintHistory[0].giver}`;
-  } else {
-    bestHintEl.textContent = "No words were guessed this game!";
-  }
-
-  showScreen("local-game-over");
+  document.getElementById("btn-results-share").onclick = () => {
+    const shareText = `I got ${correct} correct in The Restricted Speaker! Rating: ${label}`;
+    if (navigator.share) {
+      navigator.share({ text: shareText }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(shareText)
+        .then(() => alert("Score copied to clipboard!"))
+        .catch(() => alert("Could not copy score."));
+    }
+  };
 }
 
 function localPlayAgain() {
@@ -2470,6 +2660,11 @@ function localPlayAgain() {
   localGame.currentRound = 0;
   localGame.currentHintGiverIndex = 0;
   localGame.allHintHistory = [];
+  localGame.consecutiveCorrect = 0;
+  
+  // Re-request / enable tilt
+  requestTiltPermission();
+
   startLocalRound();
 }
 

@@ -4,9 +4,9 @@
   "description": "A real-time multiplayer party word-guessing game with crazy linguistic constraints.",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#0A1128",
-  "theme_color": "#FFD60A",
-  "orientation": "any",
+  "background_color": "#0d1117",
+  "theme_color": "#0d1117",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "logo.png",

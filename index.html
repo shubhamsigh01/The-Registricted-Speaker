@@ -22,12 +22,13 @@
     };
   </script>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>The Restricted Speaker | Party Word Game</title>
   
   <!-- PWA Meta Tags -->
-  <meta name="theme-color" content="#FFD60A">
+  <meta name="theme-color" content="#0d1117">
   <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="logo.png">
   <link rel="manifest" href="manifest.json">
@@ -36,10 +37,14 @@
   <meta name="description" content="A real-time multiplayer party word-guessing game with crazy linguistic constraints. Split into Hint-Givers and Guessers, beat the timer, and follow the rules!">
   <link rel="icon" type="image/png" href="logo.png">
   
-  <!-- Stylesheet -->
+  <!-- Word Bank & Stylesheet -->
+  <script defer src="words.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+  <!-- Offline Banner Warning -->
+  <div id="offline-banner" style="display: none; background: #FF4F5E; color: white; text-align: center; padding: 10px; font-weight: bold; position: fixed; top: 0; left: 0; width: 100vw; z-index: 100000; font-family: sans-serif; font-size: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.5);">📡 You're offline — playing in local mode</div>
 
   <!-- Loading Screen (shown first before Firebase/auth resolves) -->
   <div id="loading-screen">
@@ -64,7 +69,7 @@
     <!-- Screen 1: Home / Landing -->
     <section class="screen active" id="screen-home">
       <div class="logo-container">
-        <img src="logo.png" alt="The Restricted Speaker Logo" class="game-logo-img">
+        <img src="logo.png" alt="The Restricted Speaker Logo" class="game-logo-img" loading="lazy">
         <h1>The Restricted Speaker</h1>
         <p class="tagline">Words have rules. Break them and lose.</p>
       </div>
@@ -470,7 +475,7 @@
             <span id="charades-constraint-text">Constraint description</span>
           </div>
           <div class="charades-score-badge" id="charades-score-badge">0 correct</div>
-          <div class="tilt-active-badge" id="charades-tilt-badge" style="display: none;">📱 Tilt Active</div>
+          <div class="tilt-active-badge" id="charades-tilt-badge" style="display: none;">📱 Tilt to play</div>
         </div>
 
         <!-- GOT IT — right large button -->

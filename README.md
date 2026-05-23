@@ -1,43 +1,155 @@
 # 🎮 The Restricted Speaker
 
-**"The Restricted Speaker"** is a real-time multiplayer party word-guessing game built as a responsive Single Page Application (SPA). Split into **Hint-Givers** and **Guessers**, players must collaborate to guess secret target words—but the Hint-Giver is bound by a randomized, hilarious linguistic constraint that changes every round!
+A fast-paced real-time multiplayer word guessing game where communication becomes the biggest challenge.
+
+In **The Restricted Speaker**, players are divided into **Hint-Givers** and **Guessers**. The goal sounds simple — help your teammates guess a secret word. The twist? Every round, the Hint-Giver must follow a random and often hilarious speaking constraint that completely changes how clues can be given.
+
+Built as a responsive Single Page Application (SPA), the game supports real-time synchronization, spectator interactions, and dynamic multiplayer gameplay powered by Firebase Realtime Database.
 
 ---
 
-## 🚀 Features
+# ✨ Features
 
-- **Real-Time Synchronized Gameplay:** Instant state sync across all players via Firebase Realtime Database.
-- **8 Dynamic Linguistic Constraints:** Includes constraint checks for "The Vowel-Less" (no 'E's), "One-Word Wonder" (exactly 1 word), "The Interrogator" (ends in '?'), "The Alliterator" (same first letter), and more.
-- **In-App Dynamic Configuration:** Play immediately by setting your database keys via the gear icon (`⚙️`) in the browser. Credentials are saved locally to `localStorage`.
-- **Constraint Voting:** Guessers can vote on the validity of the Hint-Giver's clues. Violations result in point penalties.
-- **Spectator Mode:** Join the room as a viewer, see the secret words, track guesses unblurred, and react with floating emojis in real-time.
-- **PWA Ready:** Add the game directly to your phone's home screen for a premium mobile-native feel.
+## ⚡ Real-Time Multiplayer
+
+* Instant synchronization between all connected players
+* Live room updates using Firebase Realtime Database
+* Smooth multiplayer gameplay across devices
+
+## 🎭 Dynamic Constraint System
+
+Each round introduces a random speaking restriction for the Hint-Giver, creating unpredictable and funny gameplay.
+
+### Available Constraints
+
+| Constraint         | Description                            |
+| ------------------ | -------------------------------------- |
+| 🚫 The Vowel-Less  | Cannot use the letter **E**            |
+| ☝️ One-Word Wonder | Hint must contain exactly one word     |
+| 👻 The Narrative   | Hint must sound like a spooky story    |
+| ❓ The Interrogator | Hint must end with a question mark     |
+| 🎵 The Rhymer      | Hint should rhyme with the target word |
+| 🌀 The Abstract    | No nouns allowed                       |
+| 🔤 The Alliterator | Every word starts with the same letter |
+| 📵 The Purist      | Emojis are banned                      |
 
 ---
 
-## 🔧 Firebase Setup Instructions
+# 🗳️ Constraint Voting System
 
-Follow these steps to connect your own database backend:
+Guessers can challenge whether a clue follows the assigned rule.
 
-1. **Create a Firebase Project:**
-   - Go to [Firebase Console](https://console.firebase.google.com/).
-   - Click **Add Project** and name it `restricted-speaker`.
+* Valid hints continue the round
+* Invalid hints reduce the Hint-Giver's score
+* Encourages fair and creative gameplay
 
-2. **Enable Anonymous Authentication:**
-   - In the left menu, navigate to **Build** > **Authentication**.
-   - Click **Get Started**, choose the **Sign-in method** tab.
-   - Click **Anonymous**, toggle it to **Enabled**, and save.
+---
 
-3. **Enable Realtime Database:**
-   - Go to **Build** > **Realtime Database**.
-   - Click **Create Database**, choose your database location, and click **Next**.
-   - Select **Start in test mode** and click **Enable**.
+# 👀 Spectator Mode
 
-4. **Apply Security Rules:**
-   - Go to the **Rules** tab of your Realtime Database.
-   - Replace the default rules with the following JSON and click **Publish**:
+Users can join rooms as spectators and:
 
-```json
+* Watch gameplay live
+* View secret target words
+* See guesses without blur restrictions
+* Send floating emoji reactions in real time
+
+---
+
+# 📱 Progressive Web App (PWA)
+
+The game can be installed directly to a mobile home screen for an app-like experience.
+
+Features include:
+
+* Responsive mobile UI
+* Fast loading
+* Full-screen experience
+* Offline-ready assets
+
+---
+
+# 🏆 Scoring System
+
+## Guesser Rewards
+
+| Action                    | Points |
+| ------------------------- | ------ |
+| Correct guess on 1st hint | +100   |
+| Correct guess on 2nd hint | +75    |
+| Correct guess on 3rd hint | +50    |
+
+## Hint-Giver Rewards
+
+| Action                        | Points |
+| ----------------------------- | ------ |
+| Word guessed correctly        | +60    |
+| Nobody guesses correctly      | -30    |
+| Manual pass used              | -50    |
+| Invalid clue voted by players | -20    |
+
+---
+
+# 🔥 Tech Stack
+
+* HTML5
+* CSS3
+* Vanilla JavaScript
+* Firebase Realtime Database
+* Firebase Anonymous Authentication
+* Progressive Web App APIs
+
+---
+
+# 🔧 Firebase Setup
+
+## 1. Create Firebase Project
+
+Visit:
+
+[Firebase Console](https://console.firebase.google.com?utm_source=chatgpt.com)
+
+Create a new project named:
+
+```txt id="pwrlv5"
+restricted-speaker
+```
+
+---
+
+## 2. Enable Anonymous Authentication
+
+Go to:
+
+```txt id="5m45t4"
+Build → Authentication → Sign-in Method
+```
+
+Enable:
+
+* Anonymous Authentication
+
+---
+
+## 3. Enable Realtime Database
+
+Navigate to:
+
+```txt id="4c6n1o"
+Build → Realtime Database
+```
+
+Create database in:
+
+* Test Mode
+
+---
+
+## 4. Apply Database Rules
+
+Replace rules with:
+
+```json id="8z9w7y"
 {
   "rules": {
     "rooms": {
@@ -50,56 +162,95 @@ Follow these steps to connect your own database backend:
 }
 ```
 
-5. **Connect the App:**
-   - Under Project Overview, click the **Web icon** (`</>`) to register a web app.
-   - Copy the `firebaseConfig` keys from the setup script.
-   - **Method A:** Open `firebase-config.js` and paste your keys into the config object.
-   - **Method B (No Code Required):** Run the app locally, click the gear icon (`⚙️`) at the top right of the landing page, paste your keys, and click **Save Settings**.
+---
+
+## 5. Connect Firebase Config
+
+Register a web app and copy your Firebase config keys.
+
+You can either:
+
+### Method A
+
+Paste keys inside:
+
+```txt id="mzh8j5"
+firebase-config.js
+```
+
+### Method B
+
+Use the in-app settings panel (`⚙️`) and save credentials locally using localStorage.
 
 ---
 
-## 💻 Running the App Locally
+# 💻 Running Locally
 
-Since the app uses ES modules, you must serve it via a local web server (opening `index.html` directly in the browser using the `file://` protocol will cause CORS/module block errors).
+Because the project uses ES Modules, it must be served through a local server.
 
-### Using Node (NPX)
-In the project directory, run:
-```bash
+## Using NPX
+
+```bash id="4yx1kk"
 npx live-server
 ```
+
 or
-```bash
+
+```bash id="3pkjlwm"
 npx http-server
 ```
 
-### Using Python
-If you have Python installed, run:
-```bash
+---
+
+## Using Python
+
+```bash id="e0v5u8"
 python -m http.server 8000
 ```
-Then visit `http://localhost:8000` in your browser.
+
+Open:
+
+```txt id="8r1f5q"
+http://localhost:8000
+```
 
 ---
 
-## 🏆 Game Rules & Scoring
+# 📂 Project Structure
 
-### Scoring System
-- **Guesser rewards:**
-  - Guessed correct on **1st Hint**: `+100 pts`
-  - Guessed correct on **2nd Hint**: `+75 pts`
-  - Guessed correct on **3rd Hint**: `+50 pts`
-- **Hint-Giver rewards:**
-  - Guesser gets word correct: `+60 pts`
-  - Nobody guesses correct: `-30 pts`
-  - Manual Pass activated: `-50 pts`
-  - Hint voted "Invalid" by guessers: `-20 pts` (deducted from round score)
+```txt id="k6vrsi"
+├── index.html
+├── style.css
+├── app.js
+├── constraints.js
+├── wordbank.js
+├── firebase-config.js
+├── sw.js
+├── manifest.json
+├── logo.png
+└── README.md
+```
 
-### The 8 Constraints
-1. 🚫 **The Vowel-Less:** No words containing the letter 'E' (case-insensitive).
-2. ☝️ **The One-Word Wonder:** Entire hint must be exactly one word (no spaces).
-3. 👻 **The Narrative:** Clue must be written as a spooky horror story (min 10 characters).
-4. ❓ **The Interrogator:** Hint must be phrased as a question ending with '?'.
-5. 🎵 **The Rhymer:** Hint must end with a word that rhymes with the target word's last syllable (honor system).
-6. 🌀 **The Abstract:** You cannot use any nouns—describe actions, feelings, and attributes only (honor system).
-7. 🔤 **The Alliterator:** Every word in the hint must start with the exact same letter.
-8. 📵 **The Purist:** Pure text only. Emojis are strictly banned.
+---
+
+# 🚀 Future Improvements
+
+* Voice chat integration
+* AI-generated word packs
+* Ranked matchmaking
+* Private party rooms
+* Custom constraint creator
+* Leaderboards
+* Mobile gesture controls
+
+---
+
+# 📜 License
+
+This project is open-source and available for educational and personal use.
+
+---
+
+# 🎯 Final Note
+
+The Restricted Speaker combines party-game chaos with creative communication challenges to create a unique multiplayer experience that is both competitive and hilarious.

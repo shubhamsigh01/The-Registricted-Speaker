@@ -1681,9 +1681,6 @@ function shareScoreCard() {
 function startOfflineMode() {
   isOfflineMode = true;
   
-  // Hide Firebase config gear trigger
-  settingsTrigger.style.display = "none";
-  
   // Adjust lobby UI components for local players lists
   document.querySelector(".room-code-panel").style.display = "none";
   document.getElementById("offline-add-player-panel").style.display = "flex";
@@ -2057,8 +2054,6 @@ function resetOfflineGame() {
 
 function exitOfflineMode() {
   isOfflineMode = false;
-  
-  settingsTrigger.style.display = "flex";
   
   document.querySelector(".room-code-panel").style.display = "block";
   document.getElementById("offline-add-player-panel").style.display = "none";

@@ -3,7 +3,7 @@
  * Integrates Firebase RTDB, game loop, UI rendering, and PWA capabilities.
  */
 
-import { initFirebase, db, auth, isFirebaseReady, saveFirebaseConfig, clearFirebaseConfig, getFirebaseConfig } from "./firebase-config.js";
+import { initFirebase, db, auth, isFirebaseReady } from "./firebase-config.js";
 import { signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { ref, set, get, update, onValue, push, remove, runTransaction, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 import { CONSTRAINTS, validateHint } from "./constraints.js";
@@ -59,11 +59,7 @@ const screens = {
   "local-game-over": document.getElementById("screen-local-game-over")
 };
 
-const settingsTrigger = document.getElementById("settings-trigger");
-const settingsOverlay = document.getElementById("settings-overlay");
-const settingsClose = document.getElementById("settings-close");
-const btnCfgSave = document.getElementById("btn-cfg-save");
-const btnCfgReset = document.getElementById("btn-cfg-reset");
+
 
 // --- Confetti Engine ---
 class CanvasConfetti {
@@ -148,20 +144,18 @@ function hideLoadingScreen() {
 // --- App Entry & Firebase Authentication ---
 window.addEventListener("DOMContentLoaded", () => {
   confettiSystem = new CanvasConfetti(document.getElementById("confetti-canvas"));
-  setupSettingsUI();
-  
+
   showLoadingScreen("Connecting to game server...");
-  
-  // Try to start Firebase
+
+  // Firebase config is hardcoded — always initialises successfully.
   const ready = initFirebase();
   if (ready) {
     authenticateUser();
   } else {
-    // If placeholders, show Settings Overlay automatically to configure in-app
     hideLoadingScreen();
-    showOverlay(true);
+    alert("Firebase failed to initialise. Check the browser console for details.");
   }
-  
+
   bindUIEvents();
   loadSavedName();
 });
@@ -196,47 +190,7 @@ function authenticateUser() {
   });
 }
 
-// --- Overlay Credentials UI ---
-function setupSettingsUI() {
-  // Populate settings form with local storage values or defaults
-  const cfg = getFirebaseConfig();
-  document.getElementById("cfg-apikey").value = cfg.apiKey || "";
-  document.getElementById("cfg-authdomain").value = cfg.authDomain || "";
-  document.getElementById("cfg-dburl").value = cfg.databaseURL || "";
-  document.getElementById("cfg-projectid").value = cfg.projectId || "";
-  
-  settingsTrigger.addEventListener("click", () => showOverlay(true));
-  settingsClose.addEventListener("click", () => showOverlay(false));
-  
-  btnCfgSave.addEventListener("click", () => {
-    const custom = {
-      apiKey: document.getElementById("cfg-apikey").value.trim(),
-      authDomain: document.getElementById("cfg-authdomain").value.trim(),
-      databaseURL: document.getElementById("cfg-dburl").value.trim(),
-      projectId: document.getElementById("cfg-projectid").value.trim()
-    };
-    
-    saveFirebaseConfig(custom);
-    showOverlay(false);
-    alert("Configuration saved! Reloading application...");
-    window.location.reload();
-  });
-  
-  btnCfgReset.addEventListener("click", () => {
-    clearFirebaseConfig();
-    showOverlay(false);
-    alert("Configuration cleared! Reloading...");
-    window.location.reload();
-  });
-}
 
-function showOverlay(visible) {
-  if (visible) {
-    settingsOverlay.classList.add("active");
-  } else {
-    settingsOverlay.classList.remove("active");
-  }
-}
 
 // --- Navigation / Screen Switching ---
 function showScreen(screenId) {

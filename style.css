@@ -269,68 +269,6 @@ input[type="text"]::placeholder {
   cursor: not-allowed;
 }
 
-/* Modals / Overlays */
-.overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(4, 8, 20, 0.85);
-  backdrop-filter: blur(8px);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
-}
-
-.overlay.active {
-  display: flex;
-}
-
-.overlay-content {
-  background: var(--bg-secondary);
-  border: 2px solid var(--accent-yellow);
-  border-radius: 20px;
-  padding: 30px;
-  width: 100%;
-  max-width: 480px;
-  box-shadow: 0 0 30px rgba(255, 214, 10, 0.3);
-  position: relative;
-}
-
-.close-btn {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: 1.5rem;
-  cursor: pointer;
-}
-
-.close-btn:hover {
-  color: var(--hot-coral);
-}
-
-/* Credentials Button Indicator */
-.settings-indicator {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  font-size: 1.4rem;
-  color: var(--text-muted);
-  cursor: pointer;
-  z-index: 50;
-  transition: var(--transition-smooth);
-}
-
-.settings-indicator:hover {
-  color: var(--accent-yellow);
-  transform: rotate(30deg);
-}
 
 /* Lobby View elements */
 .room-code-panel {

@@ -436,9 +436,9 @@
       <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 20px;">
         <div style="font-size: 3rem;">📱</div>
         <p style="font-size: 1rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px;">Pass the device to</p>
-        <div style="font-family: var(--font-headings); font-size: 2.5rem; color: var(--accent-yellow); text-shadow: 0 0 15px var(--accent-yellow-glow);" id="local-handoff-name">SHUBHAM</div>
-        <p style="font-size: 1rem; color: var(--neon-mint);">You are the Hint-Giver this round!</p>
-        <p style="font-size: 0.85rem; color: var(--text-muted);">Everyone else: look away 👀</p>
+        <div style="font-family: var(--font-headings); font-size: 2.5rem; color: var(--accent-yellow); text-shadow: 0 0 15px var(--accent-yellow-glow);" id="local-handoff-name">PLAYER</div>
+        <p style="font-size: 1rem; color: var(--neon-mint);">You are the <strong>Guesser</strong> this round!</p>
+        <p style="font-size: 0.85rem; color: var(--text-muted);">Hold the phone outward so your team can see the screen 📺</p>
         <div style="background: rgba(255,214,10,0.05); border: 1px solid var(--glass-border); border-radius: 12px; padding: 10px 16px; font-size: 0.8rem; color: var(--text-muted);">
           Round <span id="local-handoff-round">1</span> of <span id="local-handoff-maxrounds">5</span>
         </div>
@@ -448,131 +448,70 @@
       </div>
     </section>
 
-    <!-- Local Screen L3: Secret Peek (Hint-Giver only) -->
+    <!-- Local Screen L3: Guesser Ready — Hold Outward -->
     <section class="screen" id="screen-local-peek">
       <div class="local-mode-badge">🏠 LOCAL</div>
       <div class="peek-screen">
-        <div class="peek-eyes-only">👁️ YOUR SECRET WORD — EYES ONLY</div>
-        <div style="margin: 16px 0;">
-          <p style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">Category</p>
-          <span class="category-badge" style="font-size: 1rem; padding: 6px 16px;" id="local-peek-category">Cricket & Gully Games</span>
+        <div class="peek-eyes-only">📺 POINT SCREEN AT YOUR TEAM</div>
+        <div style="font-size: 4rem; margin: 16px 0;">🙈</div>
+        <p style="font-size: 1.1rem; color: var(--neon-mint); font-weight: 700; margin-bottom: 8px;">You are the Guesser!</p>
+        <p style="font-size: 0.9rem; color: var(--text-muted); max-width: 320px; text-align: center; line-height: 1.6;">
+          Hold the phone so your team sees the screen.<br>
+          They will describe the word — you cannot see it!<br>
+          Tap <strong style="color:var(--neon-mint);">GOT IT</strong> when you guess correctly, or <strong style="color:var(--hot-coral);">SKIP</strong> to pass.
+        </p>
+        <div style="margin-top: 20px; font-size: 1.1rem; color: var(--accent-yellow); font-family: var(--font-headings);">
+          Starting in <span id="local-peek-countdown">3</span>s…
         </div>
-        <div class="peek-word-box">
-          <div id="local-peek-word" style="font-family: var(--font-headings); font-size: 2.2rem; color: var(--accent-yellow); letter-spacing: 2px;">GULLY CRICKET</div>
-        </div>
-        <div class="constraint-card" style="margin-top: 16px; max-width: 380px;">
-          <div class="constraint-icon" id="local-peek-constraint-icon">☝️</div>
-          <div class="constraint-info">
-            <span class="constraint-label" id="local-peek-constraint-label">The One-Word Wonder</span>
-            <span class="constraint-desc" id="local-peek-constraint-desc">Your entire hint must be ONE word only</span>
-          </div>
-        </div>
-        <div style="font-size: 0.8rem; color: var(--text-muted); text-align: left; max-width: 340px; margin-top: 12px; line-height: 1.7;">
-          ⚠️ Max <strong id="local-peek-max-hints">3</strong> hints this round<br>
-          ⚠️ Do NOT say the word or any part of it<br>
-          ⚠️ Do NOT show this screen to others
-        </div>
-        <div style="margin-top: 16px; font-size: 1.2rem; color: var(--hot-coral); font-family: var(--font-headings);">
-          Auto-hiding in <span id="local-peek-countdown">5</span>s
-        </div>
-        <button class="btn btn-danger" id="btn-local-ready-hide" style="width: 100%; max-width: 320px; margin-top: 12px;">
-          🔒 I'm ready — hide the word
+        <button class="btn btn-success" id="btn-local-ready-hide" style="width: 100%; max-width: 320px; margin-top: 16px;">
+          ✅ I'm ready — start now!
         </button>
       </div>
     </section>
 
-    <!-- Local Screen L4: Active Hint-Giver Screen -->
-    <section class="screen" id="screen-local-hinting">
-      <div class="local-mode-badge">🏠 LOCAL</div>
-      <div class="game-header">
-        <span class="round-indicator">ROUND <span id="local-hint-round">1</span>/<span id="local-hint-maxrounds">5</span></span>
-        <span class="category-badge" id="local-hint-category">Category</span>
+    <!-- Local Screen L4: Charades / Heads-Up Play Screen -->
+    <section class="screen charades-screen" id="screen-local-hinting">
+
+      <!-- Top info bar -->
+      <div class="charades-top-bar">
+        <span class="charades-meta" id="charades-round-label">ROUND 1/5</span>
+        <span class="charades-guesser" id="charades-guesser-name">PLAYER</span>
+        <span class="charades-meta" id="charades-category-label">Category</span>
       </div>
 
-      <div class="target-word-panel">
-        <div class="input-label" style="font-size: 0.75rem; margin-bottom: 4px;">Your Secret Word</div>
-        <div class="target-word-val" id="local-hint-word">GULLY CRICKET</div>
-      </div>
+      <!-- Main 3-column play area -->
+      <div class="charades-body">
 
-      <div class="constraint-card">
-        <div class="constraint-icon" id="local-hint-constraint-icon">☝️</div>
-        <div class="constraint-info">
-          <span class="constraint-label" id="local-hint-constraint-label">The One-Word Wonder</span>
-          <span class="constraint-desc" id="local-hint-constraint-desc">One word only</span>
+        <!-- SKIP — left large button -->
+        <button class="charades-btn charades-skip" id="btn-local-skip" aria-label="Skip this word">
+          <span class="charades-btn-icon">✕</span>
+          <span class="charades-btn-label">SKIP</span>
+        </button>
+
+        <!-- Word + Constraint center panel -->
+        <div class="charades-center">
+          <div class="charades-word" id="charades-word">WORD</div>
+          <div class="charades-constraint-pill">
+            <span id="charades-constraint-icon">🚫</span>
+            <span id="charades-constraint-text">Constraint description</span>
+          </div>
+          <div class="charades-score-badge" id="charades-score-badge">0 correct</div>
         </div>
+
+        <!-- GOT IT — right large button -->
+        <button class="charades-btn charades-got" id="btn-local-got-it" aria-label="Got it, correct guess">
+          <span class="charades-btn-icon">✓</span>
+          <span class="charades-btn-label">GOT IT</span>
+        </button>
+
       </div>
 
-      <div class="timer-container">
-        <div class="timer-bar" id="local-hint-timer-bar"></div>
-      </div>
-      <p style="font-size: 0.75rem; color: var(--text-muted); text-align: right; margin-top: -10px; margin-bottom: 10px;">
-        ⏱ <span id="local-hint-timer-label">15</span>s | Hint <span id="local-hint-num">1</span>/<span id="local-hint-max">3</span>
-      </p>
-
-      <div class="hints-feed" id="local-hint-history" style="min-height: 80px;">
-        <!-- Previous hints -->
+      <!-- Arrow progress timer — bottom -->
+      <div class="charades-timer-track">
+        <div class="charades-timer-fill" id="charades-timer-fill"></div>
+        <div class="charades-timer-arrow" id="charades-timer-arrow">▶</div>
       </div>
 
-      <div class="input-group" style="margin-top: 10px;">
-        <label for="local-hint-input" class="input-label">Type Hint #<span id="local-hint-num2">1</span></label>
-        <input type="text" id="local-hint-input" placeholder="Type your hint..." autocomplete="off" style="font-size: 1.1rem;">
-        <div class="input-counter-row">
-          <span id="local-hint-char-count">0 chars</span>
-          <span class="validation-feedback invalid" id="local-hint-validation">Empty hint</span>
-        </div>
-      </div>
-
-      <div style="display: flex; gap: 10px;">
-        <button class="btn btn-success" id="btn-local-send-hint" disabled style="flex: 2; font-size: 1rem;">🚀 Send Hint</button>
-        <button class="btn btn-secondary btn-sm" id="btn-local-pass" style="flex: 1; font-size: 0.85rem;">⏭️ Pass (-50)</button>
-      </div>
-    </section>
-
-    <!-- Local Screen L5: Guessers' View -->
-    <section class="screen" id="screen-local-guessing">
-      <div class="local-mode-badge">🏠 LOCAL</div>
-      <div class="game-header">
-        <span class="round-indicator">ROUND <span id="local-guess-round">1</span>/<span id="local-guess-maxrounds">5</span></span>
-        <span class="category-badge" id="local-guess-category">Category</span>
-      </div>
-
-      <div class="constraint-card" style="margin-bottom: 12px;">
-        <div class="constraint-icon" id="local-guess-constraint-icon">☝️</div>
-        <div class="constraint-info">
-          <span class="constraint-label" id="local-guess-constraint-label">The One-Word Wonder</span>
-          <span class="constraint-desc" id="local-guess-constraint-desc">One word only</span>
-        </div>
-      </div>
-
-      <div class="timer-container">
-        <div class="timer-bar" id="local-guess-timer-bar"></div>
-      </div>
-      <p style="font-size: 0.75rem; color: var(--text-muted); text-align: right; margin-top: -10px; margin-bottom: 10px;">
-        ⏱ <span id="local-guess-timer-label">15</span>s remaining
-      </p>
-
-      <div class="panel-title">💬 Hints from <span id="local-guess-giver-name">Shubham</span></div>
-      <div class="hints-feed" id="local-guess-hints-feed" style="min-height: 80px; max-height: 160px;">
-        <!-- Hint bubbles -->
-      </div>
-
-      <div class="input-group" style="margin-top: 10px;">
-        <label class="input-label">Who is guessing?</label>
-        <select id="local-guess-player-select" style="padding: 8px 12px; font-size: 0.9rem;">
-          <!-- Options populated by JS -->
-        </select>
-      </div>
-
-      <div class="input-group">
-        <label for="local-guess-input" class="input-label">Their Guess</label>
-        <input type="text" id="local-guess-input" placeholder="Type the guess..." autocomplete="off" style="font-size: 1.1rem;">
-      </div>
-      <p id="local-guess-wrong-msg" style="color: var(--hot-coral); font-size: 0.85rem; text-align: center; display: none; margin-bottom: 8px;">❌ Wrong! Try again or ask for another hint.</p>
-
-      <div style="display: flex; gap: 10px;">
-        <button class="btn btn-success" id="btn-local-submit-guess" style="flex: 2; font-size: 1rem;">✅ Submit Guess</button>
-        <button class="btn btn-secondary btn-sm" id="btn-local-add-hint" style="flex: 1.2; font-size: 0.8rem; display: none;">➕ Add Hint</button>
-      </div>
     </section>
 
     <!-- Local Screen L6: Round Result -->

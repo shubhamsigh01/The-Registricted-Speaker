@@ -54,7 +54,6 @@ const screens = {
   "local-handoff": document.getElementById("screen-local-handoff"),
   "local-peek": document.getElementById("screen-local-peek"),
   "local-hinting": document.getElementById("screen-local-hinting"),
-  "local-guessing": document.getElementById("screen-local-guessing"),
   "local-round-result": document.getElementById("screen-local-round-result"),
   "local-game-over": document.getElementById("screen-local-game-over")
 };
@@ -360,20 +359,12 @@ function bindUIEvents() {
   // Local Handoff
   document.getElementById("btn-local-i-have-device").addEventListener("click", showLocalPeek);
 
-  // Local Peek
-  document.getElementById("btn-local-ready-hide").addEventListener("click", showLocalHinting);
+  // Local Peek → Charades
+  document.getElementById("btn-local-ready-hide").addEventListener("click", showLocalCharades);
 
-  // Local Hinting
-  document.getElementById("local-hint-input").addEventListener("input", localHintInputChange);
-  document.getElementById("btn-local-send-hint").addEventListener("click", sendLocalHint);
-  document.getElementById("btn-local-pass").addEventListener("click", localPass);
-
-  // Local Guessing
-  document.getElementById("btn-local-submit-guess").addEventListener("click", localSubmitGuess);
-  document.getElementById("local-guess-input").addEventListener("keypress", (e) => {
-    if (e.key === "Enter") localSubmitGuess();
-  });
-  document.getElementById("btn-local-add-hint").addEventListener("click", localAddHint);
+  // Charades buttons — large tap targets
+  document.getElementById("btn-local-skip").addEventListener("click", localSkip);
+  document.getElementById("btn-local-got-it").addEventListener("click", localGotIt);
 
   // Local Round Result
   document.getElementById("btn-local-next-round").addEventListener("click", localNextRound);
@@ -2114,7 +2105,7 @@ let localGame = {
   selectedCategories: [],
   maxRounds: 5,
   timerDuration: 15,
-  maxHints: 3,
+  maxHints: 3,          // kept for setup UI compatibility
 
   currentRound: 0,
   currentHintGiverIndex: 0,
@@ -2123,15 +2114,13 @@ let localGame = {
   currentCategory: "",
   targetWord: "",
   currentConstraint: null,
-  hintHistory: [],         // [{ text, valid, timestamp }]
-  allHintHistory: [],      // cumulative across all rounds for "best hint"
-  guesses: [],
-  hintsGiven: 0,
-  passUsed: false,
-  timerInterval: null,
-  timeRemaining: 0,
+  allHintHistory: [],      // cumulative across all rounds for game-over recap
+  wordsCorrect: 0,         // correct GOT IT taps this round
+  wordsSkipped: 0,         // SKIP taps this round
   roundWinner: null,
-  pointsThisRound: {}
+  pointsThisRound: {},
+  timerInterval: null,
+  timeRemaining: 0
 };
 
 // ---- Utility ----
@@ -2242,13 +2231,11 @@ function startLocalGame() {
 
 function startLocalRound() {
   localGame.currentRound++;
-  localGame.hintHistory = [];
-  localGame.guesses = [];
-  localGame.hintsGiven = 0;
-  localGame.passUsed = false;
+  localGame.wordsCorrect = 0;
+  localGame.wordsSkipped = 0;
   localGame.roundWinner = null;
   localGame.pointsThisRound = {};
-  localGame.phase = "hintGiverPeek";
+  localGame.phase = "charades";
 
   showLocalHandoff();
 }
@@ -2263,270 +2250,178 @@ function showLocalHandoff() {
   showScreen("local-handoff");
 }
 
-// ---- L3: Peek Screen ----
+// ---- L3: Peek / Ready Screen ----
 function showLocalPeek() {
-  // Pick word and constraint
+  // Pick word and constraint for this round
   const cats = localGame.selectedCategories;
   const cat = cats[Math.floor(Math.random() * cats.length)];
-  const wordList = CATEGORIES[cat];
-  const word = wordList[Math.floor(Math.random() * wordList.length)];
+  const usedWords = localGame.allHintHistory.map(h => h.word);
   localGame.currentCategory = cat;
-  localGame.targetWord = word;
+  localGame.targetWord = getRandomWord(cat, null, usedWords);
+  localGame.currentConstraint = CONSTRAINTS[Math.floor(Math.random() * CONSTRAINTS.length)];
 
-  const c = CONSTRAINTS[Math.floor(Math.random() * CONSTRAINTS.length)];
-  localGame.currentConstraint = c;
-
-  document.getElementById("local-peek-category").textContent = cat;
-  document.getElementById("local-peek-word").textContent = word.toUpperCase();
-  document.getElementById("local-peek-constraint-icon").textContent = c.icon;
-  document.getElementById("local-peek-constraint-label").textContent = c.label;
-  document.getElementById("local-peek-constraint-desc").textContent = c.description;
-  document.getElementById("local-peek-max-hints").textContent = localGame.maxHints;
-
-  let countdown = 5;
+  // 3-second auto-start countdown
+  let countdown = 3;
   const countEl = document.getElementById("local-peek-countdown");
   countEl.textContent = countdown;
+
   const peekInterval = setInterval(() => {
     countdown--;
     countEl.textContent = countdown;
     if (countdown <= 0) {
       clearInterval(peekInterval);
-      showLocalHinting();
+      showLocalCharades();
     }
   }, 1000);
 
   document.getElementById("btn-local-ready-hide").onclick = () => {
     clearInterval(peekInterval);
-    showLocalHinting();
+    showLocalCharades();
   };
 
   showScreen("local-peek");
 }
 
-// ---- L4: Hinting Screen ----
-function showLocalHinting() {
+// ---- L4: Charades Screen (replaces Hinting + Guessing) ----
+function showLocalCharades() {
   stopLocalTimer();
+  localGame.phase = "charades";
+
+  const giver = localGame.players[localGame.currentHintGiverIndex];
   const c = localGame.currentConstraint;
 
-  document.getElementById("local-hint-round").textContent = localGame.currentRound;
-  document.getElementById("local-hint-maxrounds").textContent = localGame.maxRounds;
-  document.getElementById("local-hint-category").textContent = localGame.currentCategory;
-  document.getElementById("local-hint-word").textContent = localGame.targetWord.toUpperCase();
-  document.getElementById("local-hint-constraint-icon").textContent = c.icon;
-  document.getElementById("local-hint-constraint-label").textContent = c.label;
-  document.getElementById("local-hint-constraint-desc").textContent = c.description;
-  document.getElementById("local-hint-num").textContent = localGame.hintsGiven + 1;
-  document.getElementById("local-hint-num2").textContent = localGame.hintsGiven + 1;
-  document.getElementById("local-hint-max").textContent = localGame.maxHints;
+  // Top bar
+  document.getElementById("charades-round-label").textContent =
+    `ROUND ${localGame.currentRound}/${localGame.maxRounds}`;
+  document.getElementById("charades-guesser-name").textContent = giver.name.toUpperCase();
+  document.getElementById("charades-category-label").textContent = localGame.currentCategory;
 
-  // Render hint history
-  const feed = document.getElementById("local-hint-history");
-  feed.innerHTML = "";
-  localGame.hintHistory.forEach((h, i) => {
-    const div = document.createElement("div");
-    div.className = `hint-bubble ${h.valid ? "" : "invalid"}`;
-    div.innerHTML = `<div class="hint-text">${h.text}</div><div class="hint-meta"><span>Hint #${i+1}</span></div>`;
-    feed.appendChild(div);
-  });
-  if (localGame.hintHistory.length === 0) {
-    feed.innerHTML = `<div class="empty-hints">No hints sent yet. Type your first one below!</div>`;
-  }
+  // Word + constraint
+  document.getElementById("charades-word").textContent = localGame.targetWord.toUpperCase();
+  document.getElementById("charades-constraint-icon").textContent = c.icon;
+  document.getElementById("charades-constraint-text").textContent =
+    `${c.label} — ${c.description}`;
 
-  // Reset input
-  const inp = document.getElementById("local-hint-input");
-  inp.value = "";
-  document.getElementById("local-hint-char-count").textContent = "0 chars";
-  document.getElementById("local-hint-validation").textContent = "Empty hint";
-  document.getElementById("local-hint-validation").className = "validation-feedback invalid";
-  document.getElementById("btn-local-send-hint").disabled = true;
+  // Score badge
+  document.getElementById("charades-score-badge").textContent =
+    `${localGame.wordsCorrect} correct`;
+
+  // Timer bar reset
+  const fill = document.getElementById("charades-timer-fill");
+  const arrow = document.getElementById("charades-timer-arrow");
+  fill.style.width = "100%";
+  fill.classList.remove("timer-critical");
+  arrow.classList.remove("timer-critical");
 
   showScreen("local-hinting");
 
-  // Start timer
-  startLocalTimer(localGame.timerDuration,
+  // Start timer — shrinks the progress bar
+  startLocalTimer(
+    localGame.timerDuration,
     (rem) => {
-      document.getElementById("local-hint-timer-label").textContent = rem;
       const pct = (rem / localGame.timerDuration) * 100;
-      const bar = document.getElementById("local-hint-timer-bar");
-      bar.style.width = pct + "%";
-      if (rem <= 5) bar.classList.add("timer-critical");
-      else bar.classList.remove("timer-critical");
+      fill.style.width = pct + "%";
+      if (rem <= Math.floor(localGame.timerDuration * 0.25)) {
+        fill.classList.add("timer-critical");
+        arrow.classList.add("timer-critical");
+      }
     },
     () => {
-      // Timer expired — show guessing screen
-      showLocalGuessing();
+      // Time ran out
+      endLocalCharadesRound();
     }
   );
 }
 
-function localHintInputChange() {
-  const inp = document.getElementById("local-hint-input");
-  const txt = inp.value;
-  const sendBtn = document.getElementById("btn-local-send-hint");
-  const feedback = document.getElementById("local-hint-validation");
-  const counter = document.getElementById("local-hint-char-count");
+function loadNextCharadesWord() {
+  // Pick a fresh word from the same category
+  const usedWords = localGame.allHintHistory.map(h => h.word);
+  localGame.targetWord = getRandomWord(localGame.currentCategory, null, usedWords);
 
-  counter.textContent = `${txt.length} chars`;
+  document.getElementById("charades-word").textContent = localGame.targetWord.toUpperCase();
 
-  if (!txt.trim()) {
-    sendBtn.disabled = true;
-    feedback.textContent = "Empty hint";
-    feedback.className = "validation-feedback invalid";
-    return;
-  }
+  // Animate word change
+  const wordEl = document.getElementById("charades-word");
+  wordEl.classList.add("word-flash");
+  setTimeout(() => wordEl.classList.remove("word-flash"), 400);
 
-  const res = localGame.currentConstraint.validate(txt);
-  if (res) {
-    sendBtn.disabled = false;
-    feedback.textContent = "✓ Valid hint!";
-    feedback.className = "validation-feedback valid";
-  } else {
-    sendBtn.disabled = true;
-    feedback.textContent = `✗ ${localGame.currentConstraint.errorMsg}`;
-    feedback.className = "validation-feedback invalid";
-  }
+  // Update score badge
+  document.getElementById("charades-score-badge").textContent =
+    `${localGame.wordsCorrect} correct`;
 }
 
-function sendLocalHint() {
-  const inp = document.getElementById("local-hint-input");
-  const txt = inp.value.trim();
-  if (!txt) return;
-
-  const valid = localGame.currentConstraint.validate(txt);
-  if (!valid) {
-    inp.classList.add("shake-animation");
-    setTimeout(() => inp.classList.remove("shake-animation"), 500);
-    return;
-  }
-
+function localGotIt() {
   stopLocalTimer();
-  localGame.hintHistory.push({ text: txt, valid: true, timestamp: Date.now() });
-  localGame.allHintHistory.push({ text: txt, giver: localGame.players[localGame.currentHintGiverIndex].name, word: localGame.targetWord });
-  localGame.hintsGiven++;
-  localGame.phase = "guessing";
 
-  showLocalGuessing();
-}
-
-function localPass() {
-  if (!confirm("Pass? This deducts 50 pts from the Hint-Giver.")) return;
-  stopLocalTimer();
-  localGame.passUsed = true;
   const giver = localGame.players[localGame.currentHintGiverIndex];
-  localGame.pointsThisRound[giver.name] = (localGame.pointsThisRound[giver.name] || 0) - 50;
-  giver.score -= 50;
-  localGame.roundWinner = null;
-  showLocalRoundResult();
-}
+  const pts = 100;
+  giver.score += pts;
+  localGame.pointsThisRound[giver.name] = (localGame.pointsThisRound[giver.name] || 0) + pts;
+  localGame.wordsCorrect++;
+  localGame.roundWinner = { name: giver.name, points: pts * localGame.wordsCorrect };
 
-// ---- L5: Guessing Screen ----
-function showLocalGuessing() {
-  stopLocalTimer();
-  localGame.phase = "guessing";
+  // Log for game history
+  localGame.allHintHistory.push({ word: localGame.targetWord, giver: giver.name });
 
-  document.getElementById("local-guess-round").textContent = localGame.currentRound;
-  document.getElementById("local-guess-maxrounds").textContent = localGame.maxRounds;
-  document.getElementById("local-guess-category").textContent = localGame.currentCategory;
-  const c = localGame.currentConstraint;
-  document.getElementById("local-guess-constraint-icon").textContent = c.icon;
-  document.getElementById("local-guess-constraint-label").textContent = c.label;
-  document.getElementById("local-guess-constraint-desc").textContent = c.description;
-  document.getElementById("local-guess-giver-name").textContent = localGame.players[localGame.currentHintGiverIndex].name;
+  // Flash feedback
+  const btn = document.getElementById("btn-local-got-it");
+  btn.classList.add("charades-flash-success");
+  setTimeout(() => btn.classList.remove("charades-flash-success"), 300);
 
-  // Render hint history
-  const feed = document.getElementById("local-guess-hints-feed");
-  feed.innerHTML = "";
-  localGame.hintHistory.forEach((h, i) => {
-    const div = document.createElement("div");
-    div.className = "hint-bubble";
-    div.innerHTML = `<div class="hint-text">Hint #${i+1}: "${h.text}"</div>`;
-    feed.appendChild(div);
-  });
-  if (localGame.hintHistory.length === 0) {
-    feed.innerHTML = `<div class="empty-hints">No hints yet! Ask Hint-Giver to give one.</div>`;
-  }
+  confettiSystem.start();
+  setTimeout(() => { confettiSystem.stop(); }, 800);
 
-  // Populate guesser dropdown (exclude hint giver)
-  const sel = document.getElementById("local-guess-player-select");
-  sel.innerHTML = "";
-  localGame.players.forEach((p, i) => {
-    if (i !== localGame.currentHintGiverIndex) {
-      const opt = document.createElement("option");
-      opt.value = i;
-      opt.textContent = p.name;
-      sel.appendChild(opt);
-    }
-  });
+  // Load next word and keep timer running from where it left off
+  loadNextCharadesWord();
 
-  document.getElementById("local-guess-input").value = "";
-  document.getElementById("local-guess-wrong-msg").style.display = "none";
-
-  // Show "Add Hint" button if hints remaining
-  const addHintBtn = document.getElementById("btn-local-add-hint");
-  addHintBtn.style.display = (localGame.hintsGiven < localGame.maxHints) ? "inline-flex" : "none";
-
-  showScreen("local-guessing");
-
-  // Start timer
-  startLocalTimer(localGame.timerDuration,
+  // Restart timer for remaining time
+  const fill = document.getElementById("charades-timer-fill");
+  const arrow = document.getElementById("charades-timer-arrow");
+  startLocalTimer(
+    localGame.timeRemaining,
     (rem) => {
-      document.getElementById("local-guess-timer-label").textContent = rem;
       const pct = (rem / localGame.timerDuration) * 100;
-      const bar = document.getElementById("local-guess-timer-bar");
-      bar.style.width = pct + "%";
-      if (rem <= 5) bar.classList.add("timer-critical");
-      else bar.classList.remove("timer-critical");
+      fill.style.width = pct + "%";
+      if (rem <= Math.floor(localGame.timerDuration * 0.25)) {
+        fill.classList.add("timer-critical");
+        arrow.classList.add("timer-critical");
+      }
     },
-    () => {
-      // Nobody guessed in time
-      const giver = localGame.players[localGame.currentHintGiverIndex];
-      localGame.pointsThisRound[giver.name] = (localGame.pointsThisRound[giver.name] || 0) - 30;
-      giver.score -= 30;
-      localGame.roundWinner = null;
-      showLocalRoundResult();
-    }
+    () => endLocalCharadesRound()
   );
 }
 
-function localSubmitGuess() {
-  const sel = document.getElementById("local-guess-player-select");
-  const guesserIdx = parseInt(sel.value);
-  const guesser = localGame.players[guesserIdx];
-  const guess = document.getElementById("local-guess-input").value.trim();
-  if (!guess) return;
+function localSkip() {
+  stopLocalTimer();
+  localGame.wordsSkipped++;
+  localGame.allHintHistory.push({ word: localGame.targetWord, giver: localGame.players[localGame.currentHintGiverIndex].name });
 
-  const isCorrect = guess.toLowerCase() === localGame.targetWord.toLowerCase();
+  // Flash feedback
+  const btn = document.getElementById("btn-local-skip");
+  btn.classList.add("charades-flash-skip");
+  setTimeout(() => btn.classList.remove("charades-flash-skip"), 300);
 
-  if (isCorrect) {
-    stopLocalTimer();
-    // Points: hint 1 = 100, hint 2 = 75, hint 3+ = 50
-    let guesserPoints = 50;
-    if (localGame.hintsGiven === 1) guesserPoints = 100;
-    else if (localGame.hintsGiven === 2) guesserPoints = 75;
-    const giverPoints = 60;
+  loadNextCharadesWord();
 
-    guesser.score += guesserPoints;
-    localGame.players[localGame.currentHintGiverIndex].score += giverPoints;
-    localGame.pointsThisRound[guesser.name] = (localGame.pointsThisRound[guesser.name] || 0) + guesserPoints;
-    localGame.pointsThisRound[localGame.players[localGame.currentHintGiverIndex].name] = (localGame.pointsThisRound[localGame.players[localGame.currentHintGiverIndex].name] || 0) + giverPoints;
-    localGame.roundWinner = { name: guesser.name, hintNum: localGame.hintsGiven, points: guesserPoints };
-    confettiSystem.start();
-    showLocalRoundResult();
-  } else {
-    const msg = document.getElementById("local-guess-wrong-msg");
-    msg.style.display = "block";
-    document.getElementById("local-guess-input").value = "";
-    document.getElementById("local-guess-input").classList.add("shake-animation");
-    setTimeout(() => {
-      document.getElementById("local-guess-input").classList.remove("shake-animation");
-      msg.style.display = "none";
-    }, 2000);
-  }
+  const fill = document.getElementById("charades-timer-fill");
+  const arrow = document.getElementById("charades-timer-arrow");
+  startLocalTimer(
+    localGame.timeRemaining,
+    (rem) => {
+      const pct = (rem / localGame.timerDuration) * 100;
+      fill.style.width = pct + "%";
+      if (rem <= Math.floor(localGame.timerDuration * 0.25)) {
+        fill.classList.add("timer-critical");
+        arrow.classList.add("timer-critical");
+      }
+    },
+    () => endLocalCharadesRound()
+  );
 }
 
-function localAddHint() {
+function endLocalCharadesRound() {
   stopLocalTimer();
-  showLocalHinting();
+  showLocalRoundResult();
 }
 
 // ---- L6: Round Result ----
@@ -2538,18 +2433,14 @@ function showLocalRoundResult() {
   document.getElementById("local-result-word").textContent = localGame.targetWord.toUpperCase();
 
   const msgDiv = document.getElementById("local-result-message");
-  if (localGame.roundWinner) {
+  if (localGame.wordsCorrect > 0) {
     msgDiv.style.background = "rgba(0,245,212,0.08)";
     msgDiv.style.borderColor = "var(--neon-mint)";
-    msgDiv.innerHTML = `✅ <strong>${localGame.roundWinner.name}</strong> got it on Hint #${localGame.roundWinner.hintNum}! (+${localGame.roundWinner.points} pts)<br>🏆 ${localGame.players[localGame.currentHintGiverIndex].name} (Hint-Giver) also gets +60 pts!`;
-  } else if (localGame.passUsed) {
-    msgDiv.style.background = "rgba(255,79,94,0.08)";
-    msgDiv.style.borderColor = "var(--hot-coral)";
-    msgDiv.innerHTML = `⏭️ Round passed. <strong>${localGame.players[localGame.currentHintGiverIndex].name}</strong> loses 50 pts.`;
+    msgDiv.innerHTML = `✅ <strong>${localGame.players[localGame.currentHintGiverIndex].name}</strong> got <strong>${localGame.wordsCorrect}</strong> word${localGame.wordsCorrect !== 1 ? 's' : ''} correct! (+${localGame.wordsCorrect * 100} pts)<br>⏭️ Skipped: ${localGame.wordsSkipped}`;
   } else {
     msgDiv.style.background = "rgba(255,79,94,0.08)";
     msgDiv.style.borderColor = "var(--hot-coral)";
-    msgDiv.innerHTML = `❌ Nobody guessed it in time! <strong>${localGame.players[localGame.currentHintGiverIndex].name}</strong> loses 30 pts.`;
+    msgDiv.innerHTML = `❌ No words guessed! Better luck next round.<br>⏭️ Skipped: ${localGame.wordsSkipped}`;
   }
 
   // Score breakdown
@@ -2617,13 +2508,12 @@ function showLocalGameOver() {
     lb.appendChild(row);
   });
 
-  // Best hint = shortest valid hint
+  // Best word this game
   const bestHintEl = document.getElementById("local-best-hint");
   if (localGame.allHintHistory.length > 0) {
-    const best = localGame.allHintHistory.reduce((a, b) => a.text.length <= b.text.length ? a : b);
-    bestHintEl.textContent = `"${best.text}" — by ${best.giver} (for ${best.word})`;
+    bestHintEl.textContent = `"${localGame.allHintHistory[0].word}" — guessed by ${localGame.allHintHistory[0].giver}`;
   } else {
-    bestHintEl.textContent = "No hints were given this game!";
+    bestHintEl.textContent = "No words were guessed this game!";
   }
 
   showScreen("local-game-over");

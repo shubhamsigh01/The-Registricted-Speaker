@@ -1,0 +1,40 @@
+# ============================================================
+# Secrets & Environment Variables — NEVER commit these
+# ============================================================
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+
+# ============================================================
+# OS & Editor junk
+# ============================================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# JetBrains IDEs
+.idea/
+
+# ============================================================
+# Node / npm (if you ever add a build step)
+# ============================================================
+node_modules/
+npm-debug.log*
+yarn-error.log*
+dist/
+build/
+
+# ============================================================
+# Firebase local emulator & cache
+# ============================================================
+.firebase/
+firebase-debug.log
+firestore-debug.log
+database-debug.log
+ui-debug.log

@@ -9,16 +9,18 @@ export let db = null;
 export let auth = null;
 export let isFirebaseReady = false;
 
-// Your actual Firebase project configurations
+// ⚠️  DO NOT hardcode real credentials here.
+// Copy .env.example → .env and fill in your values.
+// For a browser app, users enter their own Firebase config via the UI settings.
 const defaultFirebaseConfig = {
-  apiKey: "AIzaSyAsfMXTbyUtGPMt1oXGEkh-hCSUa1gtSJs",
-  authDomain: "restricted-speaker.firebaseapp.com",
-  databaseURL: "https://restricted-speaker-default-rtdb.firebaseio.com",
-  projectId: "restricted-speaker",
-  storageBucket: "restricted-speaker.firebasestorage.app",
-  messagingSenderId: "734563835031",
-  appId: "1:734563835031:web:c863bc6a2d0ce1294c5dd2",
-  measurementId: "G-RTDF20KSR6"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.firebasestorage.app",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID",
+  measurementId: "YOUR_MEASUREMENT_ID"
 };
 
 /**

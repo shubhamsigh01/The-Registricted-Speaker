@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { categories, packs, getCategoriesForPack } from "../../data/data";
 import type { Pack } from "../../types/game";
+import { LayoutType, LAYOUT_CONFIG } from "../../hooks/useLayout";
 
 interface SelectPackScreenProps {
+  layout: LayoutType;
   onBack: () => void;
   onNext: (pack: Pack) => void;
 }
@@ -12,18 +14,38 @@ const T = {
   gray: "#94A3B8",
 };
 
-export function SelectPackScreen({ onBack, onNext }: SelectPackScreenProps) {
+export function SelectPackScreen({ layout, onBack, onNext }: SelectPackScreenProps) {
   const [selected, setSelected] = useState("everything");
   const pack = packs.find(p => p.id === selected);
+  const config = LAYOUT_CONFIG[layout];
+
+  const cardHeight =
+    layout === "mobile-landscape"
+      ? "110px"
+      : layout === "mobile-portrait" || layout === "phablet"
+      ? "140px"
+      : layout === "tablet"
+      ? "160px"
+      : "180px";
+
+  const gridCols =
+    layout === "mobile-portrait" || layout === "phablet"
+      ? 2
+      : layout === "desktop"
+      ? 4
+      : 3;
 
   return (
     <div
       style={{
-        minHeight: "100%",
+        height: "100%",
+        minHeight: "100dvh",
         background: "white",
         display: "flex",
         flexDirection: "column",
         fontFamily: "'Nunito', system-ui, sans-serif",
+        boxSizing: "border-box",
+        paddingBottom: layout === "mobile-portrait" || layout === "phablet" ? "20px" : "0px",
       }}
     >
       {/* Top bar */}
@@ -31,7 +53,7 @@ export function SelectPackScreen({ onBack, onNext }: SelectPackScreenProps) {
         style={{
           display: "flex",
           alignItems: "center",
-          padding: "16px clamp(16px, 4vw, 32px)",
+          padding: `16px ${config.hPadding}`,
           borderBottom: "1.5px solid #E2E8F0",
           gap: 16,
         }}
@@ -58,7 +80,7 @@ export function SelectPackScreen({ onBack, onNext }: SelectPackScreenProps) {
             flex: 1,
             textAlign: "center",
             margin: 0,
-            fontSize: "clamp(16px, 3vw, 22px)",
+            fontSize: "20px",
             fontWeight: 900,
             color: "#0F172A",
           }}
@@ -68,66 +90,88 @@ export function SelectPackScreen({ onBack, onNext }: SelectPackScreenProps) {
         <div style={{ width: 60 }} />
       </div>
 
-      <div style={{ flex: 1, overflowY: "auto" }}>
-        <div className="responsive-grid">
+      <div style={{ flex: 1, overflowY: "auto", padding: config.hPadding }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: `repeat(${gridCols}, 1fr)`,
+            gap: 16,
+            width: "100%",
+            maxWidth: 1200,
+            margin: "0 auto",
+            boxSizing: "border-box",
+          }}
+        >
           {packs.map(p => {
             const wc = getCategoriesForPack(p).reduce((sum, cat) => sum + cat.words.length, 0);
+            const isSelected = selected === p.id;
             return (
               <div
                 key={p.id}
-                className={`pack-card${selected === p.id ? " sel" : ""}`}
-                style={{ background: p.color }}
+                className={`pack-card${isSelected ? " sel" : ""}`}
+                style={{
+                  background: p.color,
+                  height: cardHeight,
+                  padding: "16px",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
                 onClick={() => setSelected(p.id)}
               >
-                {selected === p.id && (
+                {isSelected && (
                   <div
                     style={{
                       position: "absolute",
                       top: 10,
                       right: 10,
-                      width: 26,
-                      height: 26,
+                      width: 24,
+                      height: 24,
                       background: "white",
                       borderRadius: "50%",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       color: T.blue,
-                      fontSize: 14,
+                      fontSize: 12,
                       fontWeight: 900,
                     }}
                   >
                     ✓
                   </div>
                 )}
-                <div style={{ fontSize: "clamp(28px, 6vw, 44px)", marginBottom: 8, textAlign: "center" }}>
+                <div style={{ fontSize: layout === "mobile-landscape" ? "24px" : "32px", marginBottom: 4, textAlign: "center" }}>
                   {p.icon}
                 </div>
                 <div
                   style={{
                     color: "white",
                     fontWeight: 900,
-                    fontSize: "clamp(13px, 2.5vw, 16px)",
+                    fontSize: layout === "mobile-landscape" ? "13px" : "15px",
                     textAlign: "center",
                     lineHeight: 1.2,
-                    marginBottom: 4,
+                    marginBottom: 2,
                   }}
                 >
                   {p.name}
                 </div>
-                <div style={{ color: "rgba(255,255,255,0.8)", fontSize: "clamp(10px, 2vw, 12px)", textAlign: "center" }}>
+                <div style={{ color: "rgba(255,255,255,0.8)", fontSize: "11px", textAlign: "center" }}>
                   {wc} words
                 </div>
-                <div
-                  style={{
-                    color: "rgba(255,255,255,0.7)",
-                    fontSize: "clamp(9px, 1.8vw, 11px)",
-                    textAlign: "center",
-                    marginTop: 3,
-                  }}
-                >
-                  {p.description}
-                </div>
+                {layout !== "mobile-landscape" && (
+                  <div
+                    style={{
+                      color: "rgba(255,255,255,0.7)",
+                      fontSize: "10px",
+                      textAlign: "center",
+                      marginTop: 3,
+                      opacity: 0.9,
+                    }}
+                  >
+                    {p.description}
+                  </div>
+                )}
               </div>
             );
           })}
@@ -135,11 +179,11 @@ export function SelectPackScreen({ onBack, onNext }: SelectPackScreenProps) {
 
         {/* Preview categories */}
         {pack && (
-          <div style={{ marginTop: "clamp(16px, 4vw, 32px)", maxWidth: 900, margin: "clamp(16px, 4vw, 32px) auto 0" }}>
+          <div style={{ marginTop: 24, maxWidth: 1200, margin: "24px auto 0" }}>
             <p
               style={{
                 color: T.gray,
-                fontSize: "clamp(11px, 2vw, 14px)",
+                fontSize: "12px",
                 fontWeight: 700,
                 textTransform: "uppercase",
                 letterSpacing: "0.08em",
@@ -148,35 +192,72 @@ export function SelectPackScreen({ onBack, onNext }: SelectPackScreenProps) {
             >
               Included categories ({pack.categoryIds.length})
             </p>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {getCategoriesForPack(pack).map(cat => (
-                <span
-                  key={cat.id}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    padding: "6px 14px",
-                    background: `${cat.color}20`,
-                    border: `1.5px solid ${cat.color}40`,
-                    borderRadius: 50,
-                    fontSize: "clamp(11px, 2vw, 13px)",
-                    fontWeight: 700,
-                  }}
-                >
-                  {cat.icon} {cat.name}
-                </span>
-              ))}
-            </div>
+            
+            {layout === "mobile-landscape" ? (
+              <div
+                style={{
+                  display: "flex",
+                  overflowX: "auto",
+                  gap: 8,
+                  paddingBottom: 8,
+                  whiteSpace: "nowrap",
+                  width: "100%",
+                }}
+              >
+                {getCategoriesForPack(pack).map(cat => (
+                  <span
+                    key={cat.id}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "6px 14px",
+                      background: `${cat.color}20`,
+                      border: `1.5px solid ${cat.color}40`,
+                      borderRadius: 50,
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {cat.icon} {cat.name}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {getCategoriesForPack(pack).map(cat => (
+                  <span
+                    key={cat.id}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "6px 14px",
+                      background: `${cat.color}20`,
+                      border: `1.5px solid ${cat.color}40`,
+                      borderRadius: 50,
+                      fontSize: layout === "desktop" ? "13px" : "12px",
+                      fontWeight: 700,
+                    }}
+                  >
+                    {cat.icon} {cat.name}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      <div style={{ padding: "clamp(12px, 3vw, 24px) clamp(16px, 4vw, 32px)" }}>
-        <button className="next-btn" onClick={() => {
-          const p = packs.find(pk => pk.id === selected);
-          if (p) onNext(p);
-        }}>
+      <div style={{ padding: `16px ${config.hPadding}`, borderTop: "1.5px solid #E2E8F0" }}>
+        <button
+          className="next-btn"
+          onClick={() => {
+            const p = packs.find(pk => pk.id === selected);
+            if (p) onNext(p);
+          }}
+        >
           Next ›
         </button>
       </div>

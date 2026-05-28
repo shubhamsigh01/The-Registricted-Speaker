@@ -1,8 +1,10 @@
 import { useState } from "react";
 import type { Category, Pack } from "../../types/game";
 import { getCategoriesForPack, mergeCategories } from "../../data/data";
+import { LayoutType, LAYOUT_CONFIG } from "../../hooks/useLayout";
 
 interface SelectCategoryScreenProps {
+  layout: LayoutType;
   pack: Pack | null;
   onBack: () => void;
   onStart: (category: Category) => void;
@@ -13,11 +15,12 @@ const T = {
   gray: "#94A3B8",
 };
 
-export function SelectCategoryScreen({ pack, onBack, onStart }: SelectCategoryScreenProps) {
+export function SelectCategoryScreen({ layout, pack, onBack, onStart }: SelectCategoryScreenProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set(["all"]));
   const [search, setSearch] = useState("");
   const availCats = pack ? getCategoriesForPack(pack) : [];
   const filtered = availCats.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
+  const config = LAYOUT_CONFIG[layout];
 
   const toggle = (id: string) => {
     setSelected(prev => {
@@ -50,7 +53,6 @@ export function SelectCategoryScreen({ pack, onBack, onStart }: SelectCategorySc
 
     if (catsToMerge.length === 0) return;
 
-    // Merge categories into a shuffled pool
     const { words, hints, name } = mergeCategories(catsToMerge);
     const firstCat = catsToMerge[0];
 
@@ -66,14 +68,181 @@ export function SelectCategoryScreen({ pack, onBack, onStart }: SelectCategorySc
     onStart(pooledCat);
   };
 
+  const gridCols =
+    layout === "mobile-portrait" || layout === "phablet"
+      ? 2
+      : layout === "tablet"
+      ? 3
+      : 4;
+
+  if (layout === "mobile-landscape") {
+    return (
+      <div
+        style={{
+          height: "100%",
+          minHeight: "100dvh",
+          background: "white",
+          display: "flex",
+          flexDirection: "column",
+          fontFamily: "'Nunito', system-ui, sans-serif",
+          boxSizing: "border-box",
+        }}
+      >
+        {/* Sticky top row for mobile-landscape */}
+        <div
+          style={{
+            position: "sticky",
+            top: 0,
+            background: "white",
+            zIndex: 10,
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            padding: "8px 12px",
+            borderBottom: "1.5px solid #E2E8F0",
+          }}
+        >
+          <button
+            onClick={onBack}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              fontSize: 16,
+              color: T.blue,
+              fontWeight: 700,
+              fontFamily: "inherit",
+              whiteSpace: "nowrap",
+            }}
+          >
+            ‹ Back
+          </button>
+
+          <input
+            className="search-input"
+            placeholder="🔍 Search categories…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{
+              margin: 0,
+              flex: 1,
+              padding: "8px 12px",
+              fontSize: "14px",
+              borderRadius: "10px",
+            }}
+          />
+
+          <button
+            onClick={handleStart}
+            disabled={isDisabled}
+            style={{
+              margin: 0,
+              width: "auto",
+              padding: "8px 16px",
+              borderRadius: "50px",
+              border: "none",
+              color: "white",
+              fontWeight: 800,
+              fontSize: "13px",
+              background: isDisabled ? T.gray : T.blue,
+              opacity: isDisabled ? 0.5 : 1,
+              cursor: isDisabled ? "not-allowed" : "pointer",
+              whiteSpace: "nowrap",
+              fontFamily: "inherit",
+            }}
+          >
+            Start ({selectedCount})
+          </button>
+        </div>
+
+        {/* Scrollable grid area */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "12px" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: `repeat(${gridCols}, 1fr)`,
+              gap: 10,
+              width: "100%",
+              boxSizing: "border-box",
+            }}
+          >
+            {!search && (
+              <div
+                className={`cat-row${selected.has("all") ? " sel" : ""}`}
+                onClick={() => toggle("all")}
+                style={{
+                  gridColumn: "1 / -1",
+                  background: selected.has("all") ? "#EFF6FF" : "white",
+                  padding: "10px 14px",
+                  borderRadius: "10px",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <span style={{ fontSize: 20 }}>🌐</span>
+                  <div>
+                    <div style={{ fontWeight: 800, color: "#0F172A", fontSize: "14px" }}>
+                      All Categories
+                    </div>
+                    <div style={{ color: T.gray, fontSize: "11px" }}>
+                      Random category each round
+                    </div>
+                  </div>
+                </div>
+                {selected.has("all") && (
+                  <span style={{ color: T.blue, fontSize: 16, fontWeight: 900 }}>✓</span>
+                )}
+              </div>
+            )}
+
+            {filtered.map(c => (
+              <div
+                key={c.id}
+                className={`cat-row${selected.has(c.id) ? " sel" : ""}`}
+                onClick={() => toggle(c.id)}
+                style={{ padding: "8px 12px", borderRadius: "10px" }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: 8,
+                      background: `${c.color}20`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 14,
+                    }}
+                  >
+                    {c.icon}
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 800, color: "#0F172A", fontSize: "12px" }}>
+                      {c.name}
+                    </div>
+                    <div style={{ color: T.gray, fontSize: "10px" }}>{c.words.length} words</div>
+                  </div>
+                </div>
+                {selected.has(c.id) && <span style={{ color: T.blue, fontWeight: 900, fontSize: "12px" }}>✓</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
-        minHeight: "100%",
+        height: "100%",
+        minHeight: "100dvh",
         background: "white",
         display: "flex",
         flexDirection: "column",
         fontFamily: "'Nunito', system-ui, sans-serif",
+        boxSizing: "border-box",
+        paddingBottom: layout === "mobile-portrait" || layout === "phablet" ? "20px" : "0px",
       }}
     >
       {/* Top bar */}
@@ -81,7 +250,7 @@ export function SelectCategoryScreen({ pack, onBack, onStart }: SelectCategorySc
         style={{
           display: "flex",
           alignItems: "center",
-          padding: "16px clamp(16px, 4vw, 32px)",
+          padding: `16px ${config.hPadding}`,
           borderBottom: "1.5px solid #E2E8F0",
           gap: 16,
         }}
@@ -105,7 +274,7 @@ export function SelectCategoryScreen({ pack, onBack, onStart }: SelectCategorySc
             flex: 1,
             textAlign: "center",
             margin: 0,
-            fontSize: "clamp(16px, 3vw, 22px)",
+            fontSize: "20px",
             fontWeight: 900,
             color: "#0F172A",
             display: "flex",
@@ -133,18 +302,34 @@ export function SelectCategoryScreen({ pack, onBack, onStart }: SelectCategorySc
         <div style={{ width: 60 }} />
       </div>
 
-      <div style={{ flex: 1, overflowY: "auto", padding: "16px 0" }}>
-        <div className="search-container" style={{ maxWidth: 1200, margin: "0 auto" }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: `${config.hPadding} 0` }}>
+        <div style={{ width: "100%", boxSizing: "border-box", padding: `0 ${config.hPadding}` }}>
           <input
             className="search-input"
             placeholder="🔍  Search categories…"
             value={search}
             onChange={e => setSearch(e.target.value)}
+            style={{
+              width: "100%",
+              maxWidth: 1200,
+              margin: "0 auto 16px",
+              display: "block",
+            }}
           />
         </div>
 
-        <div className="responsive-grid">
-          {/* All categories option */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: `repeat(${gridCols}, 1fr)`,
+            gap: 16,
+            width: "100%",
+            maxWidth: 1200,
+            margin: "0 auto",
+            boxSizing: "border-box",
+            padding: `0 ${config.hPadding}`,
+          }}
+        >
           {!search && (
             <div
               className={`cat-row${selected.has("all") ? " sel" : ""}`}
@@ -154,10 +339,10 @@ export function SelectCategoryScreen({ pack, onBack, onStart }: SelectCategorySc
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <span style={{ fontSize: 22 }}>🌐</span>
                 <div>
-                  <div style={{ fontWeight: 800, color: "#0F172A", fontSize: "clamp(13px, 2.5vw, 15px)" }}>
+                  <div style={{ fontWeight: 800, color: "#0F172A", fontSize: "15px" }}>
                     All Categories
                   </div>
-                  <div style={{ color: T.gray, fontSize: "clamp(10px, 2vw, 12px)" }}>
+                  <div style={{ color: T.gray, fontSize: "12px" }}>
                     Random category each round
                   </div>
                 </div>
@@ -190,10 +375,10 @@ export function SelectCategoryScreen({ pack, onBack, onStart }: SelectCategorySc
                   {c.icon}
                 </div>
                 <div>
-                  <div style={{ fontWeight: 800, color: "#0F172A", fontSize: "clamp(12px, 2vw, 14px)" }}>
+                  <div style={{ fontWeight: 800, color: "#0F172A", fontSize: "14px" }}>
                     {c.name}
                   </div>
-                  <div style={{ color: T.gray, fontSize: "clamp(10px, 1.8vw, 11px)" }}>{c.words.length} words</div>
+                  <div style={{ color: T.gray, fontSize: "11px" }}>{c.words.length} words</div>
                 </div>
               </div>
               {selected.has(c.id) && <span style={{ color: T.blue, fontWeight: 900 }}>✓</span>}
@@ -202,8 +387,7 @@ export function SelectCategoryScreen({ pack, onBack, onStart }: SelectCategorySc
         </div>
       </div>
 
-      <div style={{ padding: "clamp(12px, 3vw, 24px) clamp(16px, 4vw, 32px)", borderTop: "1.5px solid #E2E8F0" }}>
-        {/* Selected category pill chips */}
+      <div style={{ padding: `16px ${config.hPadding}`, borderTop: "1.5px solid #E2E8F0" }}>
         {selectedCount > 0 && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12, maxHeight: 100, overflowY: "auto" }}>
             {selected.has("all") ? (

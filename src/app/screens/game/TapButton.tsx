@@ -4,9 +4,11 @@ interface TapButtonProps {
   onClick: () => void;
   icon: string;
   shortcut?: string;
+  btnSize?: string;
+  iconSize?: string;
 }
 
-export function TapButton({ label, color, onClick, icon, shortcut }: TapButtonProps) {
+export function TapButton({ label, color, onClick, icon, shortcut, btnSize = "76px", iconSize = "26px" }: TapButtonProps) {
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, userSelect: "none" }}>
       <button
@@ -14,8 +16,8 @@ export function TapButton({ label, color, onClick, icon, shortcut }: TapButtonPr
         className="tap-btn"
         style={{
           position: "relative",
-          width: "clamp(56px, 14vw, 88px)",
-          height: "clamp(56px, 14vw, 88px)",
+          width: btnSize,
+          height: btnSize,
           borderRadius: "50%",
           background: color,
           border: "none",
@@ -28,13 +30,13 @@ export function TapButton({ label, color, onClick, icon, shortcut }: TapButtonPr
           transition: "transform 0.1s, box-shadow 0.1s",
         }}
       >
-        <span style={{ fontSize: "clamp(20px, 5vw, 30px)", color: "white", fontWeight: 900, lineHeight: 1 }}>
+        <span style={{ fontSize: iconSize, color: "white", fontWeight: 900, lineHeight: 1 }}>
           {icon}
         </span>
       </button>
       <span style={{
         color: "white",
-        fontSize: "clamp(10px, 2vw, 13px)",
+        fontSize: "11px",
         fontWeight: 800,
         textTransform: "uppercase",
         letterSpacing: "0.08em",

@@ -1,4 +1,7 @@
+import { LayoutType, LAYOUT_CONFIG } from "../../hooks/useLayout";
+
 interface HowToPlayScreenProps {
+  layout: LayoutType;
   onBack: () => void;
 }
 
@@ -8,22 +11,27 @@ const T = {
   purple: "#7C3AED",
 };
 
-export function HowToPlayScreen({ onBack }: HowToPlayScreenProps) {
+export function HowToPlayScreen({ layout, onBack }: HowToPlayScreenProps) {
+  const config = LAYOUT_CONFIG[layout];
+
   return (
     <div
       style={{
-        minHeight: "100%",
+        height: "100%",
+        minHeight: "100dvh",
         background: "white",
         display: "flex",
         flexDirection: "column",
         fontFamily: "'Nunito', system-ui, sans-serif",
+        boxSizing: "border-box",
+        paddingBottom: layout === "mobile-portrait" || layout === "phablet" ? "20px" : "0px",
       }}
     >
       <div
         style={{
           display: "flex",
           alignItems: "center",
-          padding: "16px clamp(16px, 4vw, 32px)",
+          padding: `16px ${config.hPadding}`,
           borderBottom: "1.5px solid #E2E8F0",
           gap: 16,
         }}
@@ -47,7 +55,7 @@ export function HowToPlayScreen({ onBack }: HowToPlayScreenProps) {
             flex: 1,
             textAlign: "center",
             margin: 0,
-            fontSize: "clamp(16px, 3vw, 22px)",
+            fontSize: "20px",
             fontWeight: 900,
             color: "#0F172A",
           }}
@@ -57,7 +65,7 @@ export function HowToPlayScreen({ onBack }: HowToPlayScreenProps) {
         <div style={{ width: 60 }} />
       </div>
 
-      <div style={{ flex: 1, padding: "clamp(20px, 5vw, 48px) clamp(16px, 4vw, 40px)", overflowY: "auto" }}>
+      <div style={{ flex: 1, padding: config.hPadding, overflowY: "auto" }}>
         <div style={{ maxWidth: 640, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
           {[
             {
@@ -79,10 +87,10 @@ export function HowToPlayScreen({ onBack }: HowToPlayScreenProps) {
             {
               n: "03",
               icon: "⚡",
-              title: "Hold to confirm",
+              title: "Tap to score",
               bg: "#FFF7ED",
               accent: "#F59E0B",
-              desc: "When you guess correctly, hold the green CORRECT button for 1 second. Hold the red SKIP button to pass.",
+              desc: "Tapping CORRECT or SKIP is instant, single-tap, no hold required. Score points for correct guesses and build streaks!",
             },
             {
               n: "04",
@@ -98,7 +106,7 @@ export function HowToPlayScreen({ onBack }: HowToPlayScreenProps) {
               style={{
                 background: s.bg,
                 borderRadius: 20,
-                padding: "clamp(16px, 3vw, 24px)",
+                padding: "16px",
                 display: "flex",
                 gap: 16,
                 alignItems: "flex-start",
@@ -123,14 +131,14 @@ export function HowToPlayScreen({ onBack }: HowToPlayScreenProps) {
                 <div
                   style={{
                     fontWeight: 900,
-                    fontSize: "clamp(14px, 2.5vw, 17px)",
+                    fontSize: "16px",
                     color: "#0F172A",
                     marginBottom: 6,
                   }}
                 >
                   {s.title}
                 </div>
-                <div style={{ color: "#475569", fontSize: "clamp(12px, 2vw, 14px)", lineHeight: 1.6 }}>{s.desc}</div>
+                <div style={{ color: "#475569", fontSize: "14px", lineHeight: 1.6 }}>{s.desc}</div>
               </div>
             </div>
           ))}

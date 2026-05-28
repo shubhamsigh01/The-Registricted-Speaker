@@ -4,11 +4,20 @@
     <head>
       
       <meta charset="UTF-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
       <title>Responsive Game App Design</title>
       <meta name="description" content="Engage in a responsive word-guessing party game that adapts seamlessly across devices, offering fun, interactive gameplay with category selection and real-time scoring." />
       <meta name="robots" content="noindex, nofollow" />
-      <style>html, body { height: 100%; margin: 0; } #root { height: 100%; }</style>
+      <style>
+        :root {
+          --safe-top:    env(safe-area-inset-top,    0px);
+          --safe-bottom: env(safe-area-inset-bottom, 0px);
+          --safe-left:   env(safe-area-inset-left,   0px);
+          --safe-right:  env(safe-area-inset-right,  0px);
+        }
+        html, body { height: 100%; margin: 0; }
+        #root { height: 100%; }
+      </style>
       
     </head>
 

@@ -1,0 +1,1 @@
+export { HowToPlayScreen } from './HowToPlayScreen';

@@ -1,256 +1,79 @@
-# 🎮 The Restricted Speaker
+# The Restricted Speaker (HeadsUp! Game)
 
-A fast-paced real-time multiplayer word guessing game where communication becomes the biggest challenge.
+A modern, premium, and fully responsive word-guessing party game inspired by "Heads Up!". The game is designed to adapt seamlessly across all mobile, tablet, and desktop devices, featuring dynamic animations, beautiful dark-mode styling, category selection, and real-time score tracking.
 
-In **The Restricted Speaker**, players are divided into **Hint-Givers** and **Guessers**. The goal sounds simple — help your teammates guess a secret word. The twist? Every round, the Hint-Giver must follow a random and often hilarious speaking constraint that completely changes how clues can be given.
+## Features
 
-Built as a responsive Single Page Application (SPA), the game supports real-time synchronization, spectator interactions, and dynamic multiplayer gameplay powered by Firebase Realtime Database.
-
----
-
-# ✨ Features
-
-## ⚡ Real-Time Multiplayer
-
-* Instant synchronization between all connected players
-* Live room updates using Firebase Realtime Database
-* Smooth multiplayer gameplay across devices
-
-## 🎭 Dynamic Constraint System
-
-Each round introduces a random speaking restriction for the Hint-Giver, creating unpredictable and funny gameplay.
-
-### Available Constraints
-
-| Constraint         | Description                            |
-| ------------------ | -------------------------------------- |
-| 🚫 The Vowel-Less  | Cannot use the letter **E**            |
-| ☝️ One-Word Wonder | Hint must contain exactly one word     |
-| 👻 The Narrative   | Hint must sound like a spooky story    |
-| ❓ The Interrogator | Hint must end with a question mark     |
-| 🎵 The Rhymer      | Hint should rhyme with the target word |
-| 🌀 The Abstract    | No nouns allowed                       |
-| 🔤 The Alliterator | Every word starts with the same letter |
-| 📵 The Purist      | Emojis are banned                      |
+- **Modern Responsive Design**: Optimized layout that adapts to any screen size (mobile, tablet, desktop).
+- **Vibrant Dark-Themed UI**: Built using React, Tailwind CSS v4, Radix UI primitives, and Framer Motion (via `motion`) for smooth animations and transitions.
+- **Multiple Word Packs & Categories**: Choose from various curated packs (Classic, Family, Party, Everything) and categories (Superheroes, Movies, Animals, Food, etc.).
+- **Interactive Gameplay**:
+  - Auto-revealing hints after 8 seconds of inactivity.
+  - Keyboard shortcuts (`ArrowLeft` for Skip, `ArrowRight` for Correct) for easy testing and desktop gameplay.
+  - Interactive tap actions for Skip and Correct.
+- **Dynamic Feedback & Streaks**: Visual streak indicators, particle confetti effects on the results screen, and a round accuracy breakdown.
+- **Deployment-Ready**: Configured for Vercel deployment with necessary security headers and device orientation permissions policy.
 
 ---
 
-# 🗳️ Constraint Voting System
+## Tech Stack
 
-Guessers can challenge whether a clue follows the assigned rule.
-
-* Valid hints continue the round
-* Invalid hints reduce the Hint-Giver's score
-* Encourages fair and creative gameplay
-
----
-
-# 👀 Spectator Mode
-
-Users can join rooms as spectators and:
-
-* Watch gameplay live
-* View secret target words
-* See guesses without blur restrictions
-* Send floating emoji reactions in real time
+- **Framework**: React 18 & TypeScript
+- **Build Tool**: Vite 6
+- **Styling**: Tailwind CSS v4
+- **Components & Icons**: Radix UI Primitives, Lucide Icons, Material UI Icons
+- **Animations**: Framer Motion / Motion, Canvas Confetti
 
 ---
 
-# 📱 Progressive Web App (PWA)
+## Getting Started
 
-The game can be installed directly to a mobile home screen for an app-like experience.
+Follow these steps to run the application locally:
 
-Features include:
+### 1. Prerequisites
+Ensure you have [Node.js](https://nodejs.org/) installed (version 18+ recommended).
 
-* Responsive mobile UI
-* Fast loading
-* Full-screen experience
-* Offline-ready assets
+### 2. Install Dependencies
+Run the following command to install the required packages:
+```bash
+npm install
+```
 
----
+### 3. Run Development Server
+Start the Vite development server:
+```bash
+npm run dev
+```
+Open your browser and navigate to `http://localhost:5173`.
 
-# 🏆 Scoring System
-
-## Guesser Rewards
-
-| Action                    | Points |
-| ------------------------- | ------ |
-| Correct guess on 1st hint | +100   |
-| Correct guess on 2nd hint | +75    |
-| Correct guess on 3rd hint | +50    |
-
-## Hint-Giver Rewards
-
-| Action                        | Points |
-| ----------------------------- | ------ |
-| Word guessed correctly        | +60    |
-| Nobody guesses correctly      | -30    |
-| Manual pass used              | -50    |
-| Invalid clue voted by players | -20    |
+### 4. Build for Production
+To build the application for production:
+```bash
+npm run build
+```
+This generates a highly optimized static build in the `dist/` directory.
 
 ---
 
-# 🔥 Tech Stack
+## Project Structure
 
-* HTML5
-* CSS3
-* Vanilla JavaScript
-* Firebase Realtime Database
-* Firebase Anonymous Authentication
-* Progressive Web App APIs
-
----
-
-# 🔧 Firebase Setup
-
-## 1. Create Firebase Project
-
-Visit:
-
-[Firebase Console](https://console.firebase.google.com?utm_source=chatgpt.com)
-
-Create a new project named:
-
-```txt id="pwrlv5"
-restricted-speaker
+```text
+├── src/
+│   ├── app/
+│   │   ├── components/  # ActionButton, HoldButton, CategoryCard, GameWordCard, UI components
+│   │   ├── data/        # Game category and word pack datasets
+│   │   ├── screens/     # Screens (Home, Pack Select, Category Select, Game, Results, HowTo)
+│   │   ├── types/       # TypeScript type declarations
+│   │   └── App.tsx      # Main application router and state management
+│   ├── styles/          # Tailwind, theme, font, and global stylesheets
+│   └── main.tsx         # Application entry point
+├── package.json         # Project dependencies and script configurations
+├── vite.config.ts       # Vite bundler configuration
+└── vercel.json          # Deployment and header configurations
 ```
 
 ---
 
-## 2. Enable Anonymous Authentication
+## License
 
-Go to:
-
-```txt id="5m45t4"
-Build → Authentication → Sign-in Method
-```
-
-Enable:
-
-* Anonymous Authentication
-
----
-
-## 3. Enable Realtime Database
-
-Navigate to:
-
-```txt id="4c6n1o"
-Build → Realtime Database
-```
-
-Create database in:
-
-* Test Mode
-
----
-
-## 4. Apply Database Rules
-
-Replace rules with:
-
-```json id="8z9w7y"
-{
-  "rules": {
-    "rooms": {
-      "$roomId": {
-        ".read": true,
-        ".write": "auth != null"
-      }
-    }
-  }
-}
-```
-
----
-
-## 5. Connect Firebase Config
-
-Register a web app and copy your Firebase config keys.
-
-You can either:
-
-### Method A
-
-Paste keys inside:
-
-```txt id="mzh8j5"
-firebase-config.js
-```
-
-### Method B
-
-Use the in-app settings panel (`⚙️`) and save credentials locally using localStorage.
-
----
-
-# 💻 Running Locally
-
-Because the project uses ES Modules, it must be served through a local server.
-
-## Using NPX
-
-```bash id="4yx1kk"
-npx live-server
-```
-
-or
-
-```bash id="3pkjlwm"
-npx http-server
-```
-
----
-
-## Using Python
-
-```bash id="e0v5u8"
-python -m http.server 8000
-```
-
-Open:
-
-```txt id="8r1f5q"
-http://localhost:8000
-```
-
----
-
-# 📂 Project Structure
-
-```txt id="k6vrsi"
-├── index.html
-├── style.css
-├── app.js
-├── constraints.js
-├── wordbank.js
-├── firebase-config.js
-├── sw.js
-├── manifest.json
-├── logo.png
-└── README.md
-```
-
----
-
-# 🚀 Future Improvements
-
-* Voice chat integration
-* AI-generated word packs
-* Ranked matchmaking
-* Private party rooms
-* Custom constraint creator
-* Leaderboards
-* Mobile gesture controls
-
----
-
-# 📜 License
-
-This project is open-source and available for educational and personal use.
-
----
-
-# 🎯 Final Note
-
-The Restricted Speaker combines party-game chaos with creative communication challenges to create a unique multiplayer experience that is both competitive and hilarious.
+This project is configured for private use. Design reference is available at the [Responsive Game App Design on Figma](https://www.figma.com/design/3WQ96yBzQQTKp7mKBDy2b7/Responsive-Game-App-Design).

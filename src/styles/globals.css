@@ -1,0 +1,467 @@
+/* ─── HeadsUp! Game Styles ─────────────────────────────────────────────────── */
+
+/* ─── KEYFRAME ANIMATIONS ──────────────────────────────────────────────────── */
+@keyframes confettiFall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+@keyframes slideRight {
+  0%   { transform: translateX(0) rotate(0deg); }
+  100% { transform: translateX(120%) rotate(15deg); opacity: 0; }
+}
+
+@keyframes slideLeft {
+  0%   { transform: translateX(0) rotate(0deg); }
+  100% { transform: translateX(-120%) rotate(-15deg); opacity: 0; }
+}
+
+@keyframes cardIn {
+  0%   { transform: translateY(40px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes popIn {
+  0%   { transform: scale(0.5); opacity: 0; }
+  70%  { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes fadeUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.5; transform: scale(0.7); }
+}
+
+@keyframes timerPulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.1); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ─── ANIMATION UTILITY CLASSES ────────────────────────────────────────────── */
+.card-anim-right { animation: slideRight 0.3s ease-in forwards; }
+.card-anim-left  { animation: slideLeft  0.3s ease-in forwards; }
+.card-idle       { animation: cardIn 0.3s ease-out forwards; }
+.pop             { animation: popIn 0.6s cubic-bezier(.34, 1.56, .64, 1) forwards; }
+.fade-up         { animation: fadeUp 0.5s ease forwards; }
+
+.timer-urgent {
+  animation: timerPulse 0.5s infinite;
+  color: #EF4444 !important;
+}
+
+/* ─── HOME SCREEN ──────────────────────────────────────────────────────────── */
+.menu-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: white;
+}
+.menu-row:hover {
+  background: #F8FAFC;
+  transform: translateX(2px);
+}
+
+.start-btn {
+  width: 100%;
+  padding: 18px;
+  background: #2563EB;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  font-size: clamp(15px, 3.5vw, 18px);
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Nunito', system-ui, sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.start-btn:hover { background: #1D4ED8; transform: scale(1.01); }
+.start-btn:active { transform: scale(0.98); }
+
+/* ─── PACK SELECT ──────────────────────────────────────────────────────────── */
+.pack-card {
+  border-radius: 20px;
+  padding: clamp(14px, 3vw, 22px);
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 3px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+.pack-card:hover { transform: translateY(-2px); }
+.pack-card.sel {
+  border-color: white;
+  box-shadow: 0 0 0 4px #2563EB;
+}
+
+.next-btn {
+  width: 100%;
+  padding: 18px;
+  background: #2563EB;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  font-size: clamp(15px, 3vw, 18px);
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Nunito', system-ui, sans-serif;
+}
+.next-btn:hover { background: #1D4ED8; }
+
+/* ─── CATEGORY SELECT ──────────────────────────────────────────────────────── */
+.cat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1.5px solid #E2E8F0;
+}
+.cat-row:hover { background: #F8FAFC; }
+.cat-row.sel {
+  background: #EFF6FF;
+  border-color: #BFDBFE;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 14px;
+  font-size: 14px;
+  font-family: 'Nunito', system-ui, sans-serif;
+  outline: none;
+  box-sizing: border-box;
+  margin-bottom: 12px;
+}
+.search-input:focus { border-color: #2563EB; }
+
+/* ─── RESULTS SCREEN ───────────────────────────────────────────────────────── */
+.play-btn {
+  width: 100%;
+  padding: 18px;
+  background: #2563EB;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  font-size: clamp(15px, 3vw, 18px);
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Nunito', system-ui, sans-serif;
+}
+.play-btn:hover { background: #1D4ED8; }
+
+.end-btn {
+  width: 100%;
+  padding: 16px;
+  background: none;
+  color: #2563EB;
+  border: 2px solid #2563EB;
+  border-radius: 50px;
+  font-size: clamp(14px, 3vw, 17px);
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Nunito', system-ui, sans-serif;
+  margin-top: 10px;
+}
+.end-btn:hover { background: #EFF6FF; }
+
+/* ─── GLOBAL GAME FONT ────────────────────────────────────────────────────── */
+.game-font {
+  font-family: 'Nunito', system-ui, sans-serif;
+}
+
+/* ─── RESPONSIVE LAYOUT & SIDEBAR SYSTEM ──────────────────────────────────── */
+
+/* Base App Layout */
+.app-layout {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+/* When sidebar is visible */
+@media (max-width: 639px) {
+  .app-layout.with-sidebar {
+    padding-bottom: 64px; /* Space for mobile bottom tab */
+  }
+}
+
+@media (min-width: 640px) {
+  .app-layout.with-sidebar {
+    flex-direction: row;
+  }
+  .app-layout.with-sidebar .main-content {
+    margin-left: 64px; /* Space for tablet sidebar */
+  }
+}
+
+@media (min-width: 1024px) {
+  .app-layout.with-sidebar .main-content {
+    margin-left: 240px; /* Space for desktop sidebar */
+  }
+}
+
+/* Sidebar Container */
+.sidebar-container {
+  display: flex;
+  background: #ffffff;
+  border-color: #E2E8F0;
+  box-sizing: border-box;
+}
+
+/* Sidebar Logo */
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-text {
+  font-weight: 900;
+  color: #0F172A;
+  font-size: 20px;
+}
+.logo-spark {
+  font-size: 22px;
+}
+
+/* Sidebar Nav & Tabs */
+.sidebar-nav {
+  display: flex;
+  width: 100%;
+}
+.sidebar-tab {
+  display: flex;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Nunito', system-ui, sans-serif;
+  color: #64748B;
+  transition: all 0.15s ease;
+}
+.sidebar-tab:hover {
+  color: #0F172A;
+  background: #F1F5F9;
+}
+.sidebar-tab.active {
+  color: #2563EB;
+  font-weight: 800;
+}
+
+/* Mobile: bottom sticky tab bar */
+@media (max-width: 639px) {
+  .sidebar-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    flex-direction: row;
+    border-top: 1.5px solid #E2E8F0;
+    z-index: 100;
+  }
+  .sidebar-logo {
+    display: none;
+  }
+  .sidebar-nav {
+    flex-direction: row;
+    justify-content: space-around;
+    height: 100%;
+  }
+  .sidebar-tab {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    height: 100%;
+    gap: 4px;
+  }
+  .tab-icon {
+    font-size: 18px;
+  }
+  .tab-label {
+    font-size: 10px;
+  }
+  .sidebar-tab.active {
+    background: #EFF6FF;
+    border-top: 3px solid #2563EB;
+  }
+}
+
+/* Tablet: left narrow sidebar */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .sidebar-container {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 64px;
+    flex-direction: column;
+    align-items: center;
+    border-right: 1.5px solid #E2E8F0;
+    padding: 16px 0;
+    z-index: 100;
+  }
+  .sidebar-logo {
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+  .logo-text {
+    display: none;
+  }
+  .sidebar-nav {
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .sidebar-tab {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+  }
+  .tab-icon {
+    font-size: 20px;
+  }
+  .tab-label {
+    display: none;
+  }
+  .sidebar-tab.active {
+    background: #EFF6FF;
+  }
+}
+
+/* Desktop: full left sidebar */
+@media (min-width: 1024px) {
+  .sidebar-container {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 240px;
+    flex-direction: column;
+    border-right: 1.5px solid #E2E8F0;
+    padding: 24px 16px;
+    z-index: 100;
+  }
+  .sidebar-logo {
+    padding-left: 12px;
+    margin-bottom: 32px;
+  }
+  .sidebar-nav {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .sidebar-tab {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    width: 100%;
+    font-size: 15px;
+    font-weight: 700;
+    text-align: left;
+  }
+  .tab-icon {
+    font-size: 20px;
+  }
+  .sidebar-tab.active {
+    background: #EFF6FF;
+  }
+}
+
+/* Responsive Grid System */
+.responsive-grid {
+  display: grid;
+  gap: 16px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+@media (max-width: 639px) {
+  .responsive-grid {
+    grid-template-columns: repeat(2, 1fr);
+    padding: 16px;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .responsive-grid {
+    grid-template-columns: repeat(3, 1fr);
+    padding: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-grid {
+    grid-template-columns: repeat(4, 1fr);
+    padding: 40px;
+  }
+}
+
+/* Button hover/active tactile feedback */
+.tap-btn {
+  transform: scale(1);
+}
+.tap-btn:active {
+  transform: scale(0.95) !important;
+}
+
+@media (max-width: 1023px) {
+  .shortcut-badge {
+    display: none !important;
+  }
+}
+
+/* Search Container Padding alignment */
+.search-container {
+  box-sizing: border-box;
+  width: 100%;
+}
+@media (max-width: 639px) {
+  .search-container { padding: 0 16px !important; }
+}
+@media (min-width: 640px) and (max-width: 1023px) {
+  .search-container { padding: 0 24px !important; }
+}
+@media (min-width: 1024px) {
+  .search-container { padding: 0 40px !important; }
+}
+
+

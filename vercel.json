@@ -9,11 +9,5 @@
         { "key": "Permissions-Policy", "value": "accelerometer=*, gyroscope=*" }
       ]
     }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
   ]
 }
